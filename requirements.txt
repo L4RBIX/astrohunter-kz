@@ -1,0 +1,14 @@
+numpy
+pandas
+matplotlib
+scipy
+scikit-learn
+xgboost
+lightkurve
+astroquery
+astropy
+astroplan
+tqdm
+pyarrow
+jupyter
+notebook

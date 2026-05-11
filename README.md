@@ -1,17 +1,42 @@
 # AstroHunter KZ
 
-AstroHunter KZ is a research-oriented astrophysics + machine learning project that tests whether debris-disk / infrared-excess stars in TESS light curves show a higher yield of exocomet-like asymmetric transit candidates than matched non-disk control stars.
+**Research Question:** Do TESS targets with debris-disk / infrared-excess evidence show a higher post-vetting yield of exocomet-like asymmetric transit candidates compared with matched non-disk control stars?
 
-The project is not a claim of exocomet discovery. It focuses on a controlled comparison of candidate yield, false-positive vetting, and reproducible signal-detection methodology.
+**Scientific Honesty Statement:** This project identifies candidate asymmetric transits (dips) based on simple depth and asymmetry scoring. It serves as a reproducible signal-detection pipeline for controlled statistical comparisons. It does **NOT** claim the discovery of confirmed exocomets.
 
-## Research Question
+**Phase 1 Status:** Beta Pic positive-control test.
+The goal of this phase is to retrieve TESS light curves for $\beta$ Pictoris, detect candidate dips, compute simple asymmetry scores, and output figures and tables, ensuring the known events can be recovered by the pipeline without applying machine learning yet.
 
-Does selecting TESS targets with debris-disk / IR-excess evidence increase the post-vetting yield of exocomet-like asymmetric transit candidates compared with a matched non-disk control sample?
+## Installation
 
-## Core Idea
+1. Clone the repository and navigate into it:
+   ```bash
+   git clone <your-repo-url>
+   cd astrohunter-kz
+   ```
 
-Exocomets are expected to be more likely around stars with debris disks, because debris disks trace planetesimal reservoirs. This project tests that idea using public NASA TESS light curves, catalog cross-matching, asymmetric transit detection, and candidate vetting.
+2. (Optional) Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   ```
 
-## Current Status
+3. Install the dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Phase 1: β Pictoris positive-control test.
+## Running the Phase 1 Notebook
+
+1. Launch Jupyter Notebook or Jupyter Lab:
+   ```bash
+   jupyter notebook
+   ```
+2. Open `notebooks/01_beta_pic_positive_control.ipynb`.
+3. Run all cells in the notebook.
+
+## Expected Outputs
+Running the notebook will download the data (which takes a minute) and automatically save outputs:
+- **Full light curve plot**: Saved to `results/figures/beta_pic_full_lightcurve.png`
+- **Candidate event window plots**: The top 10 deepest events will be plotted and saved in `results/figures/`
+- **Candidate table**: A CSV of all detected candidates will be saved to `results/tables/beta_pic_candidate_dips.csv`
