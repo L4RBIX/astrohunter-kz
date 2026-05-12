@@ -1,27 +1,40 @@
 # Environment
+.venv/
 venv/
 env/
-.venv/
 .env
 
 # Python cache
 __pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 
 # Jupyter
 .ipynb_checkpoints/
 
 # Data
-# Ignore raw data files to avoid committing large catalogs or light curves
-data/*
+# Keep raw archive products and large downloaded light curves out of Git.
+data/raw/
+data/lightcurves/
+data/**/*.fits
+data/**/*.fits.gz
+data/**/*.lc
+data/**/*.lc.gz
 !data/README.md
 !data/.gitkeep
 
-# Results
-# Ignore generated outputs, but keep the folder structure
-results/figures/*
-!results/figures/.gitkeep
+# Archive/cache products
+cache/
+.lightkurve-cache/
+mastDownload/
 
-results/tables/*
-!results/tables/.gitkeep
+# Temporary logs
+*.log
+logs/
+
+# Results
+# Small Phase 1 example figures/tables are allowed when useful for portfolio.
+# Avoid committing bulky ad-hoc batches or temporary result files.
+results/**/*.tmp
+results/**/*.log

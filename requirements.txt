@@ -12,3 +12,4 @@ tqdm
 pyarrow
 jupyter
 notebook
+pytest
