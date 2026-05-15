@@ -44,3 +44,26 @@ The `final_candidate_score` column is a prioritisation aid, not a posterior
 probability of exocomet detection.  Feature importance plots describe what
 makes a synthetic injection recoverable, not what distinguishes real exocomets
 from noise.
+
+## Phase 5 Vetting- and Statistics-Specific Rules
+
+Additional forbidden wording for Phase 5 outputs:
+
+- "automated vetting confirms"
+- "the rate ratio proves debris-disk enhancement"
+- "the rate ratio shows excess candidates"
+- "Phase 5 statistics demonstrate an exocomet signal"
+- "p-value of X means the result is significant"
+
+Required wording for Phase 5 outputs:
+
+- "automated vetting applies heuristic flags only"
+- "all candidates require manual review"
+- "external catalog crossmatches (EB/VSX/SIMBAD) are not implemented"
+- "dev-sample rate statistics are preliminary and unstable"
+- "rate ratios on N < 10 candidates have no scientific meaning"
+- "full survey data are required before any interpretation"
+
+The `automated_vetting_status` column is a heuristic filter aid, not a
+astrophysical classification.  The rate ratio in `rate_ratio_summary.csv`
+is a technical readiness demonstration for Phase 6, not a discovery claim.

@@ -177,3 +177,37 @@ The ML ranker is trained on *synthetic* injection-recovery labels.  Its AUC
 and F1 scores describe sensitivity on synthetic signals, not real-data
 candidate purity.  Ranked candidates require vetting before any astrophysical
 interpretation.  See `docs/PHASE4_ML_RANKER.md` for full documentation.
+
+## Phase 5: Candidate Vetting and Rate Statistics
+
+Apply automated vetting flags to ranked candidates, then compute preliminary
+rate statistics.
+
+```bash
+python scripts/run_vetting.py \
+  --candidate-table results/tables/ranked_candidate_events_dev.csv \
+  --output-vetted results/tables/vetted_candidate_events_dev.csv \
+  --output-manual results/tables/manual_vetting_sheet.csv \
+  --snr-threshold 5.0
+
+python scripts/run_stats.py \
+  --vetted-candidates results/tables/vetted_candidate_events_dev.csv \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --output results/tables/rate_ratio_summary.csv \
+  --n-bootstrap 1000 \
+  --random-seed 42
+```
+
+Expected Phase 5 outputs:
+
+- `results/tables/vetted_candidate_events_dev.csv`
+- `results/tables/manual_vetting_sheet.csv`
+- `results/tables/rate_ratio_summary.csv`
+- `results/figures/rate_ratio_plot.png`
+- `results/figures/candidate_score_vs_snr.png`
+- `results/figures/vetting_flag_counts.png`
+
+Automated vetting applies heuristic flags only.  It does NOT confirm
+exocomet detections.  External catalog crossmatches (EB/VSX/SIMBAD) are
+not implemented.  Dev-sample rate statistics are preliminary and unstable
+with N < 10 candidates.  See `docs/PHASE5_VETTING_STATISTICS.md`.

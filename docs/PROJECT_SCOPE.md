@@ -37,12 +37,22 @@ Constraints:
 Outputs: ml_training_features.csv, ml_evaluation_summary.csv,
 ranked_candidate_events_dev.csv, and four ML diagnostic figures.
 
-## Phase 5: Vetting and Statistics
+## Phase 5: Vetting and Statistics (complete)
 
-Apply a vetting cascade for quality flags, background contamination, eclipsing
-binaries, periodic variables, spacecraft/systematic artifacts, and multi-sector
-checks. Estimate candidate-yield rate ratios and uncertainty for target versus
-matched-control samples.
+Apply automated vetting flags to ranked candidate events and compute preliminary
+target/control candidate-yield rate statistics.
+
+Constraints:
+- Automated vetting is NOT scientific confirmation.
+- All candidates require manual review.
+- External catalog crossmatches (EB, VSX, SIMBAD) are NOT implemented — placeholders only.
+- Dev-sample rate statistics are preliminary and unstable (N < 10 candidates).
+- Rate ratios do not constitute a scientific claim.
+
+Outputs: vetted_candidate_events_dev.csv, manual_vetting_sheet.csv,
+rate_ratio_summary.csv, and three diagnostic figures.
+
+See [docs/PHASE5_VETTING_STATISTICS.md](PHASE5_VETTING_STATISTICS.md) for full documentation.
 
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 

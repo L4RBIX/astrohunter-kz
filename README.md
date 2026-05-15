@@ -273,6 +273,46 @@ Phase 4 outputs: `results/tables/ml_training_features.csv`,
 
 See [docs/PHASE4_ML_RANKER.md](docs/PHASE4_ML_RANKER.md) for full documentation.
 
+## Phase 5: Candidate Vetting and Rate Statistics
+
+Phase 5 applies automated vetting flags to ranked candidate events and computes
+preliminary target/control candidate-yield rate statistics.
+
+**Automated vetting is NOT scientific confirmation.**
+**All candidates require manual review.**
+**Dev-sample rate statistics are preliminary (N < 10 candidates).**
+External catalog crossmatches (EB, VSX, SIMBAD) are not implemented.
+
+### Run automated vetting
+
+```bash
+python scripts/run_vetting.py \
+  --candidate-table results/tables/ranked_candidate_events_dev.csv \
+  --output-vetted results/tables/vetted_candidate_events_dev.csv \
+  --output-manual results/tables/manual_vetting_sheet.csv \
+  --snr-threshold 5.0
+```
+
+### Run rate statistics
+
+```bash
+python scripts/run_stats.py \
+  --vetted-candidates results/tables/vetted_candidate_events_dev.csv \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --output results/tables/rate_ratio_summary.csv \
+  --n-bootstrap 1000 \
+  --random-seed 42
+```
+
+Phase 5 outputs: `results/tables/vetted_candidate_events_dev.csv`,
+`results/tables/manual_vetting_sheet.csv`,
+`results/tables/rate_ratio_summary.csv`,
+`results/figures/rate_ratio_plot.png`,
+`results/figures/candidate_score_vs_snr.png`,
+`results/figures/vetting_flag_counts.png`.
+
+See [docs/PHASE5_VETTING_STATISTICS.md](docs/PHASE5_VETTING_STATISTICS.md) for full documentation.
+
 ## Repository Structure
 
 ```text
@@ -282,7 +322,9 @@ src/astrohunter/
   injection.py        Synthetic dip injection and injection-recovery framework
   features.py         Phase 4 feature engineering for the ML ranker
   ml.py               Phase 4 ML ranker: training, evaluation, scoring
-  plotting.py         Matplotlib figure helpers (Phase 1 + Phase 3 + Phase 4)
+  vetting.py          Phase 5 automated vetting flags
+  stats.py            Phase 5 candidate yield rate statistics
+  plotting.py         Matplotlib figure helpers (Phase 1–5)
   catalogs.py         VizieR catalog loading and target-sample normalization
   crossmatch.py       Coordinate matching and control-sample building
 scripts/
@@ -290,6 +332,8 @@ scripts/
   run_injection_recovery.py   Phase 3 injection-recovery CLI
   run_scan.py                 Phase 3 real-data scan CLI
   train_event_ranker.py       Phase 4 ML ranker training and candidate scoring
+  run_vetting.py              Phase 5 automated vetting CLI
+  run_stats.py                Phase 5 rate statistics CLI
   build_catalogs.py
   build_control_pool_from_user_csv.py
   verify_catalogs.py
@@ -300,6 +344,8 @@ docs/
   REPRODUCIBILITY.md
   PROJECT_SCOPE.md
   PHASE3_INJECTION_RECOVERY.md
+  PHASE4_ML_RANKER.md
+  PHASE5_VETTING_STATISTICS.md
 cache/lightcurves/   Parquet cache (git-ignored)
 results/figures/
 results/tables/
@@ -308,6 +354,4 @@ tests/
 
 ## Next Phases
 
-- Phase 4: add an ML event ranker using injection-recovery labels and Phase 3 features.
-- Phase 5: implement vetting and rate-ratio statistics (target vs. control yield).
-- Phase 6: prepare a paper draft and claims/reproducibility audit.
+- Phase 6: full survey scan (all matched-pair targets + controls), manual vetting, and paper draft.

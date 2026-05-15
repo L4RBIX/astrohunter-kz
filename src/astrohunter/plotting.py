@@ -1,4 +1,4 @@
-"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1 + Phase 3 + Phase 4)."""
+"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1 + Phase 3 + Phase 4 + Phase 5)."""
 
 from __future__ import annotations
 
@@ -599,6 +599,258 @@ def plot_target_control_balance(target_df, control_df, columns, output_path=None
             ax.set_ylabel("Count")
             ax.grid(alpha=0.25)
             ax.legend(loc="best")
+
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: Vetting and rate-statistics plots
+# ---------------------------------------------------------------------------
+
+def plot_rate_ratio_summary(
+    summary_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Candidate Yield Rate Ratio: Target vs. Control",
+) -> "plt.Figure":
+    """Plot the rate ratio with Poisson CI error bars for each subset.
+
+    A horizontal dashed line at rate_ratio=1 marks equal yield.
+    Both Poisson and bootstrap CIs are shown when available.
+
+    Parameters
+    ----------
+    summary_df:
+        Output of ``summarize_rate_statistics()``.
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    subsets = summary_df["subset"].tolist() if "subset" in summary_df.columns else list(range(len(summary_df)))
+    x_pos = np.arange(len(subsets))
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    for i, (subset, row) in enumerate(zip(subsets, summary_df.itertuples())):
+        rr = getattr(row, "rate_ratio", float("nan"))
+        rr_lo = getattr(row, "rate_ratio_ci_lo", float("nan"))
+        rr_hi = getattr(row, "rate_ratio_ci_hi", float("nan"))
+        t_count = getattr(row, "target_count", 0)
+        c_count = getattr(row, "control_count", 0)
+
+        if not np.isfinite(rr):
+            ax.scatter(i, 0, marker="x", s=80, color="gray", zorder=3)
+            ax.text(i, 0.05, "undefined\n(0 control)", ha="center", va="bottom",
+                    fontsize=8, color="gray")
+            continue
+
+        yerr_lo = max(0, rr - rr_lo) if np.isfinite(rr_lo) else 0
+        yerr_hi = max(0, rr_hi - rr) if np.isfinite(rr_hi) else 0
+
+        ax.errorbar(
+            i, rr,
+            yerr=[[yerr_lo], [yerr_hi]],
+            fmt="o",
+            color="tab:blue",
+            markersize=8,
+            capsize=6,
+            linewidth=1.5,
+            label="Poisson 95% CI" if i == 0 else None,
+            zorder=3,
+        )
+
+        boot_lo = getattr(row, "bootstrap_ci_lo", float("nan"))
+        boot_hi = getattr(row, "bootstrap_ci_hi", float("nan"))
+        if np.isfinite(boot_lo) and np.isfinite(boot_hi):
+            ax.vlines(
+                i + 0.12, boot_lo, boot_hi,
+                colors="tab:orange", linewidth=2.5, alpha=0.7,
+                label="Bootstrap 95% CI" if i == 0 else None,
+            )
+
+        ax.text(
+            i, -0.25,
+            f"T:{t_count}  C:{c_count}",
+            ha="center", va="top", fontsize=8, color="gray",
+        )
+
+    ax.axhline(1.0, color="black", linestyle="--", linewidth=1, alpha=0.6, label="RR = 1 (equal yield)")
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(subsets, rotation=15, ha="right")
+    ax.set_ylabel("Rate Ratio  (target / control)")
+    ax.set_title(title)
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(axis="y", alpha=0.25)
+    ax.set_xlim(-0.5, len(subsets) - 0.5)
+
+    note = (
+        "PRELIMINARY — dev sample only. "
+        "Rate ratios with N < 10 candidates are unstable.\n"
+        "Not a scientific claim. Full survey required."
+    )
+    fig.text(0.5, -0.06, note, ha="center", fontsize=8, color="darkred",
+             style="italic", wrap=True)
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+def plot_candidate_score_vs_snr(
+    candidate_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Candidate Score vs. Local SNR",
+    score_col: str = "final_candidate_score",
+) -> "plt.Figure":
+    """Scatter plot of final_candidate_score vs. local_snr.
+
+    Points are coloured by automated_vetting_status when available.
+
+    Parameters
+    ----------
+    candidate_df:
+        Vetted candidate event DataFrame.
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+    score_col:
+        Column name for the y-axis score.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    from matplotlib.lines import Line2D
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    if candidate_df.empty or score_col not in candidate_df.columns:
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+        ax.set_title(title)
+        fig.tight_layout()
+        return _finish_figure(fig, output_path)
+
+    snr = pd.to_numeric(
+        candidate_df.get("local_snr", pd.Series(np.nan, index=candidate_df.index)),
+        errors="coerce",
+    )
+    score = pd.to_numeric(candidate_df[score_col], errors="coerce")
+
+    status = candidate_df.get("automated_vetting_status", None)
+    color_map = {"pass": "tab:blue", "flagged": "tab:orange"}
+    colors = (
+        [color_map.get(str(s), "gray") for s in status]
+        if status is not None
+        else ["tab:blue"] * len(candidate_df)
+    )
+
+    ax.scatter(snr, score, c=colors, s=80, alpha=0.8, edgecolors="k", linewidths=0.5, zorder=3)
+
+    name_col = "target_name" if "target_name" in candidate_df.columns else "tic_id"
+    for i, (_, row) in enumerate(candidate_df.iterrows()):
+        label = str(row.get(name_col, ""))
+        if label:
+            ax.annotate(
+                label,
+                (snr.iloc[i], score.iloc[i]),
+                textcoords="offset points",
+                xytext=(6, 3),
+                fontsize=8,
+            )
+
+    legend_elements = [
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="tab:blue",
+               markersize=8, label="pass"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="tab:orange",
+               markersize=8, label="flagged"),
+    ]
+    if status is not None:
+        ax.legend(handles=legend_elements, title="Automated vetting", loc="lower right")
+
+    ax.axvline(5.0, color="gray", linestyle="--", linewidth=1, alpha=0.5)
+    ax.set_xlabel("Local SNR (σ)")
+    ax.set_ylabel(score_col)
+    ax.set_title(title)
+    ax.grid(alpha=0.25)
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+def plot_vetting_flag_counts(
+    candidate_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Automated Vetting Flag Counts",
+) -> "plt.Figure":
+    """Horizontal bar chart showing how many candidates triggered each flag.
+
+    Parameters
+    ----------
+    candidate_df:
+        Candidate DataFrame with automated vetting flag columns.
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    flag_cols = [
+        "flag_low_snr",
+        "flag_edge_event",
+        "flag_single_point_like",
+        "flag_likely_flare_shape",
+        "flag_low_delta_chi2",
+        "flag_poor_asymmetry_fit",
+    ]
+
+    present = [c for c in flag_cols if c in candidate_df.columns]
+    counts = [int(candidate_df[c].sum()) for c in present]
+    labels = [c.replace("flag_", "").replace("_", " ") for c in present]
+
+    fig, ax = plt.subplots(figsize=(7, max(3, len(present) * 0.7 + 1)))
+
+    if not present or len(candidate_df) == 0:
+        ax.text(0.5, 0.5, "No vetting flags found", ha="center", va="center",
+                transform=ax.transAxes)
+        ax.set_title(title)
+        fig.tight_layout()
+        return _finish_figure(fig, output_path)
+
+    y_pos = np.arange(len(present))
+    colors = ["tab:orange" if c > 0 else "tab:green" for c in counts]
+    bars = ax.barh(y_pos, counts, color=colors, edgecolor="white", height=0.6)
+
+    for bar, count in zip(bars, counts):
+        ax.text(
+            bar.get_width() + 0.02,
+            bar.get_y() + bar.get_height() / 2,
+            str(count),
+            va="center",
+            ha="left",
+            fontsize=9,
+        )
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Number of candidates flagged")
+    ax.set_title(title)
+    ax.set_xlim(0, max(counts + [1]) + 1)
+    ax.invert_yaxis()
+    ax.grid(axis="x", alpha=0.25)
+
+    total = len(candidate_df)
+    n_flagged = int((candidate_df[present].any(axis=1)).sum()) if present else 0
+    fig.text(
+        0.5, -0.04,
+        f"Total candidates: {total}  |  Flagged ≥ 1 criterion: {n_flagged}",
+        ha="center", fontsize=8, color="gray",
+    )
 
     fig.tight_layout()
     return _finish_figure(fig, output_path)
