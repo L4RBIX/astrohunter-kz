@@ -307,3 +307,60 @@ definitive rejection.  Lack of a match does NOT prove astrophysical validity.
 Failed queries (`status = failed`) must be re-run with network access before
 interpreting "no match" as meaningful.  All candidates require manual review.
 See `docs/PHASE5C_EXTERNAL_VETTING.md` for full documentation.
+
+## Phase 5D: Full Matched Survey Pipeline
+
+Orchestrate the complete scan → rank → vet → external-check → stats pipeline
+in one command.  Requires network access for TESS downloads and catalog queries.
+Use `--limit-pairs` and `--skip-*` flags for offline or smoke-test runs.
+
+```bash
+# Full pipeline (all phases, requires network)
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix full_matched \
+  --max-lightcurves-per-star 1 \
+  --sigma-threshold 4.0
+
+# Resume an interrupted run (skips successfully-scanned stars)
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix full_matched \
+  --resume
+
+# Offline smoke test (2 pairs, no remote catalog queries)
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix smoke_test \
+  --limit-pairs 2 --skip-vsx --skip-simbad --skip-tess-eb
+```
+
+Expected Phase 5D outputs (with prefix `full_matched`):
+
+- `results/tables/full_matched_detector_candidates.csv`
+- `results/tables/full_matched_detector_candidates.meta.json`
+- `results/tables/full_matched_scan_status.csv`
+- `results/tables/full_matched_ranked_candidates.csv`
+- `results/tables/full_matched_ml_eval.csv`
+- `results/tables/full_matched_vetted_candidates.csv`
+- `results/tables/full_matched_manual_vetting_sheet.csv`
+- `results/tables/full_matched_external_checked_candidates.csv`
+- `results/tables/full_matched_external_crossmatch_summary.csv`
+- `results/tables/full_matched_rate_ratio_summary.csv`
+- `results/tables/full_matched_run_summary.csv`
+
+Phase 5D results are PRELIMINARY.  All candidates require manual vetting and
+multi-sector confirmation.  Scan failures must be re-run with network access.
+External catalog checks reduce false positives but do NOT confirm exocomet
+detections.  Rate statistics have no scientific meaning until full-survey
+coverage and manual vetting are complete.
+See `docs/PHASE5D_FULL_MATCHED_RUN.md` for full documentation.

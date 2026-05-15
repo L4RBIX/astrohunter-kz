@@ -120,6 +120,43 @@ external_crossmatch_summary.csv, external_catalog_flag_counts.png.
 See [docs/PHASE5C_EXTERNAL_VETTING.md](PHASE5C_EXTERNAL_VETTING.md) for full
 documentation.
 
+## Phase 5D: Full Matched Survey Execution Support (complete)
+
+Orchestrate the complete scan → rank → vet → external-check → stats
+pipeline across all 28 matched target and control stars in a single
+command.  Supports resumable execution via `--resume`, per-star scan
+status tracking, and a pipeline-level run summary.
+
+Constraints:
+- All detected events are candidates only — not confirmed exocomets.
+- Automated detection, ML ranking, and automated vetting are NOT
+  scientific confirmation.
+- External catalog checks reduce false-positive contamination but do
+  NOT confirm or disprove exocomet detections.
+- Scan failures must be reported transparently (`success = False` in
+  the scan status table).  A failed download does not mean no candidates.
+- Rate statistics from the full matched run are preliminary until manual
+  vetting and full-survey coverage are complete.
+- Manual inspection of every candidate remains mandatory.
+
+Key additions:
+- `{prefix}_scan_status.csv`: per-star scan status with `tic_id`,
+  `sample_role`, `success`, `failure_reason`, `n_candidates`, `cache_used`.
+- `{prefix}_run_summary.csv`: pipeline-level summary with phase list,
+  star counts, candidate counts, and rate ratio (if stats ran).
+- Resume logic: stars with `success = True` in an existing scan status
+  table are skipped when `--resume` is set.
+- `--limit-pairs N`: process only the first N matched pairs (smoke testing).
+- `--skip-*` flags for each phase: scan, ranking, vetting, external, stats.
+
+Outputs: `{prefix}_detector_candidates.csv`, `{prefix}_scan_status.csv`,
+`{prefix}_ranked_candidates.csv`, `{prefix}_vetted_candidates.csv`,
+`{prefix}_external_checked_candidates.csv`, `{prefix}_rate_ratio_summary.csv`,
+`{prefix}_run_summary.csv`.
+
+See [docs/PHASE5D_FULL_MATCHED_RUN.md](PHASE5D_FULL_MATCHED_RUN.md) for
+full documentation.
+
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 
 Prepare a transparent methods/results draft, archive reproducible tables, audit

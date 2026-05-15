@@ -406,6 +406,67 @@ Phase 5C outputs: `results/tables/vetted_candidate_events_external_checked.csv`,
 See [docs/PHASE5C_EXTERNAL_VETTING.md](docs/PHASE5C_EXTERNAL_VETTING.md) for
 full documentation including status values, flag labels, and interpretation guide.
 
+## Phase 5D: Full Matched Survey Pipeline
+
+Phase 5D provides a single-command orchestrator that runs the complete
+scan → rank → vet → external-check → stats pipeline across all 28 matched
+target and control stars, with resumable execution and per-star status tracking.
+
+**All candidates are preliminary — not confirmed exocomets.**
+**Scan failures are reported in the scan status table; they do not mean no candidates.**
+**Rate statistics remain preliminary until manual vetting and full-survey coverage.**
+**External catalog checks reduce false positives — they do NOT confirm exocomet detections.**
+
+### Run the full pipeline
+
+```bash
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix full_matched \
+  --max-lightcurves-per-star 1 \
+  --sigma-threshold 4.0
+```
+
+Resume an interrupted run (skips already-succeeded stars):
+
+```bash
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix full_matched \
+  --resume
+```
+
+Smoke test with 2 pairs and no network catalog queries:
+
+```bash
+python scripts/run_full_matched_pipeline.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --injection-table results/tables/injection_recovery.csv \
+  --output-prefix smoke_test \
+  --limit-pairs 2 --skip-vsx --skip-simbad --skip-tess-eb
+```
+
+Phase 5D outputs (with default prefix `full_matched`):
+`results/tables/full_matched_detector_candidates.csv`,
+`results/tables/full_matched_scan_status.csv`,
+`results/tables/full_matched_ranked_candidates.csv`,
+`results/tables/full_matched_vetted_candidates.csv`,
+`results/tables/full_matched_external_checked_candidates.csv`,
+`results/tables/full_matched_rate_ratio_summary.csv`,
+`results/tables/full_matched_run_summary.csv`.
+
+See [docs/PHASE5D_FULL_MATCHED_RUN.md](docs/PHASE5D_FULL_MATCHED_RUN.md) for
+full documentation including resume logic, per-star status columns, and
+prerequisites.
+
 ## Repository Structure
 
 ```text
@@ -430,6 +491,7 @@ scripts/
   run_matched_scan.py         Phase 5B matched target+control scan CLI
   rank_matched_scan.py        Phase 5B ML ranking for matched-scan candidates
   run_external_vetting.py     Phase 5C external catalog crossmatch vetting
+  run_full_matched_pipeline.py Phase 5D full matched survey orchestrator
   build_catalogs.py
   build_control_pool_from_user_csv.py
   verify_catalogs.py
@@ -444,6 +506,7 @@ docs/
   PHASE5_VETTING_STATISTICS.md
   PHASE5B_MATCHED_SCAN.md
   PHASE5C_EXTERNAL_VETTING.md
+  PHASE5D_FULL_MATCHED_RUN.md
 cache/lightcurves/   Parquet cache (git-ignored)
 results/figures/
 results/tables/
@@ -452,6 +515,6 @@ tests/
 
 ## Next Phases
 
-- Phase 6: full-network matched scan (all 28 target + 28 control stars), complete
-  manual vetting cascade, additional external catalog checks (Gaia variability,
-  ASAS-SN, ZTF), and paper draft.
+- Phase 6: full-survey manual vetting cascade (all candidates from Phase 5D),
+  additional external catalog checks (Gaia variability, ASAS-SN, ZTF),
+  multi-sector confirmation, and paper draft.
