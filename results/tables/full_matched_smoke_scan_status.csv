@@ -1,0 +1,5 @@
+tic_id,sample_role,matched_pair_id,star_name,attempted,success,failure_reason,n_candidates,cache_used,scan_timestamp
+12377940,target,0,HR 9102,True,True,,1,True,2026-05-15T21:05:59.164405
+428612809,control,0,TIC 428612809,True,True,,1,True,2026-05-15T21:05:59.179378
+120462356,target,1,HD 105,True,True,,0,True,2026-05-15T21:05:59.183875
+368404959,control,1,TIC 368404959,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:00.204419

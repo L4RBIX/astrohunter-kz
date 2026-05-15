@@ -1,0 +1,20 @@
+{
+  "n_target_attempted": 2,
+  "n_control_attempted": 2,
+  "n_target_success": 2,
+  "n_control_success": 1,
+  "n_target_failed": 0,
+  "n_control_failed": 1,
+  "target_tics_scanned": [
+    12377940,
+    120462356
+  ],
+  "control_tics_scanned": [
+    428612809
+  ],
+  "sigma_threshold": 4.0,
+  "window_days": 1.0,
+  "max_lightcurves_per_star": 1,
+  "pipeline_version": "phase5d_v1",
+  "detector_version": "phase3_v1"
+}

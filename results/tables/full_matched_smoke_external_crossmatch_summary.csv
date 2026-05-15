@@ -1,0 +1,5 @@
+catalog,n_total,n_matched,n_not_found,n_failed,n_not_attempted
+VSX (B/vsx/vsx),2,0,0,0,2
+SIMBAD,2,0,0,0,2
+TESS-EB (J/ApJS/258/16),2,0,0,0,2
+flag:no_external_match,2,2,0,0,0

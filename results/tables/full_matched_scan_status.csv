@@ -1,0 +1,57 @@
+tic_id,sample_role,matched_pair_id,star_name,attempted,success,failure_reason,n_candidates,cache_used,scan_timestamp
+12377940,target,0,HR 9102,True,True,,1,True,2026-05-15T21:06:16.992309
+428612809,control,0,TIC 428612809,True,True,,1,True,2026-05-15T21:06:17.005260
+120462356,target,1,HD 105,True,True,,0,True,2026-05-15T21:06:17.009686
+368404959,control,1,TIC 368404959,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.751231
+238432056,target,2,HD 166,True,True,,0,True,2026-05-15T21:06:17.756358
+289971775,control,2,TIC 289971775,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.758978
+229012143,target,3,HD 203,True,True,,1,True,2026-05-15T21:06:17.770105
+44561692,control,3,TIC 44561692,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.772858
+405187645,target,4,HD 377,True,True,,0,True,2026-05-15T21:06:17.776702
+257502302,control,4,TIC 257502302,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.778934
+194503676,target,5,sig And,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.780997
+266586474,control,5,TIC 266586474,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.783185
+425934574,target,6,HD 1466,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.785587
+240644651,control,6,TIC 240644651,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.788005
+37748347,target,7,HD 1461,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.790357
+347304641,control,7,TIC 347304641,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.792611
+184281898,target,8,9 Cet,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.794731
+398018469,control,8,TIC 398018469,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.796925
+155996406,target,9,HD 2834,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.798978
+384986756,control,9,TIC 384986756,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.801091
+469974193,target,10,bet03 Tuc,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.803136
+196613658,control,10,TIC 196613658,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.805757
+38381642,target,11,HD 3126,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.808146
+461597067,control,11,TIC 461597067,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.810256
+212960381,target,12,HD 3296,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.812547
+444335503,control,12,TIC 444335503,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.814661
+156069089,target,13,HD 3670,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.816779
+380884414,control,13,TIC 380884414,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.818938
+436544292,target,14,66 Psc,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.821182
+57920096,control,14,TIC 57920096,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.823459
+435680540,target,15,HR 333,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.825750
+67786245,control,15,TIC 67786245,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.827896
+196841006,target,16,HD 7590,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.830026
+346923890,control,16,TIC 346923890,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.832140
+191770861,target,17,HD 8907,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.834231
+368454136,control,17,TIC 368454136,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.836377
+231839456,target,18,HD 10472,True,True,,0,True,2026-05-15T21:06:17.840963
+303241443,control,18,TIC 303241443,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.843539
+229142326,target,19,HD 10939,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.845728
+352180433,control,19,TIC 352180433,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.847883
+266746662,target,20,DK Cet,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.850233
+283545765,control,20,TIC 283545765,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.852393
+231064749,target,21,HD 13246,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.854746
+445188441,control,21,TIC 445188441,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.857291
+63790159,target,22,gam Tri,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.859696
+234309613,control,22,TIC 234309613,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.861866
+118301927,target,23,HD 14082B,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.863941
+115598451,control,23,TIC 115598451,True,True,,1,True,2026-05-15T21:06:17.880397
+381003375,target,24,HD 15115,True,True,,1,True,2026-05-15T21:06:17.894126
+440042075,control,24,TIC 440042075,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.896853
+91529289,target,25,phi For,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.899177
+259902074,control,25,TIC 259902074,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.901566
+372121208,target,26,HD 15407,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.903814
+417236897,control,26,TIC 417236897,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.906549
+436840249,target,27,33 Ari,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.908963
+331940649,control,27,TIC 331940649,True,False,"download_failed: expected an indented block (__init__.py, line 7)",0,False,2026-05-15T21:06:17.911250

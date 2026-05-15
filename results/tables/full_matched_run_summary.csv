@@ -1,0 +1,2 @@
+pipeline_version,output_prefix,phases_run,phases_skipped,n_target_attempted,n_target_success,n_target_failed,n_control_attempted,n_control_success,n_control_failed,n_candidates_total,n_candidates_target,n_candidates_control,run_timestamp,rate_ratio,rate_ratio_ci_lo,rate_ratio_ci_hi
+phase5d_v1,full_matched,"scan,ranking,vetting,external,stats",,28,7,21,28,2,26,5,3,2,2026-05-15T21:06:29.405747,0.4285714285714285,0.0244665889812984,10.342028091747247
