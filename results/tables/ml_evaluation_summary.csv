@@ -1,0 +1,2 @@
+n_test,n_train_positive,n_train_negative,n_test_positive,n_test_negative,accuracy,ranker_version,model_type,feature_names,warning,precision,recall,f1,roc_auc,pr_auc,tn,fp,fn,tp,n_train,test_size_fraction,random_seed,injection_table
+10,19,11,6,4,1.0,phase4_v1,GradientBoostingClassifier,"depth_ppm, local_snr, noise_mad",,1.0,1.0,1.0,1.0,1.0,4,0,0,6,30,0.25,42,results/tables/injection_recovery.csv

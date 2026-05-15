@@ -22,11 +22,20 @@ Implement a Kennedy-style asymmetric-transit detector and injection-recovery
 experiments on real TESS light curves to measure sensitivity, false positives,
 and completeness.
 
-## Phase 4: Machine-Learning Ranker
+## Phase 4: Machine-Learning Ranker (complete)
 
-Train an event-level ranker, likely using XGBoost as the main model and a
-Dobrycheva-style Random Forest as a baseline. ML should rank candidates, not
-claim confirmation.
+Train an interpretable event-level ranker on injection-recovery labels.
+XGBoost (primary) or sklearn GradientBoostingClassifier (fallback).
+The ranker produces a prioritisation score for human review.
+
+Constraints:
+- Trained on *synthetic* injection-recovery labels only.
+- ML scores are NOT confirmation probabilities.
+- Injection-set AUC/F1 does NOT equal real-data purity.
+- Real candidates require vetting cascade before interpretation.
+
+Outputs: ml_training_features.csv, ml_evaluation_summary.csv,
+ranked_candidate_events_dev.csv, and four ML diagnostic figures.
 
 ## Phase 5: Vetting and Statistics
 

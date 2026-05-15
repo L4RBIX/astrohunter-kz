@@ -192,39 +192,6 @@ notebooks/01_beta_pic_positive_control.ipynb
 python -m pytest
 ```
 
-## Repository Structure
-
-```text
-src/astrohunter/
-  lightcurves.py      TESS search, download, cleaning, normalization helpers
-  asymmetry.py        Candidate dip detection and simple asymmetry metrics
-  plotting.py         Matplotlib figure helpers
-  catalogs.py         VizieR catalog loading and target-sample normalization
-  crossmatch.py       Small coordinate matching and placeholder crossmatch hooks
-scripts/
-  run_beta_pic_control.py
-  build_catalogs.py
-  build_control_pool_from_user_csv.py
-  verify_catalogs.py
-notebooks/
-  00_quickstart_beta_pic.ipynb
-  01_catalog_build.ipynb
-  01_beta_pic_positive_control.ipynb
-docs/
-  CLAIMS_POLICY.md
-  CONTROL_POOL_GUIDE.md
-  DATA_SOURCES.md
-  REPRODUCIBILITY.md
-  PROJECT_SCOPE.md
-  MASTER_BLUEPRINT.md
-catalogs/
-  README.md
-results/
-  figures/
-  tables/
-tests/
-```
-
 ## Data Policy
 
 Raw downloaded light curves, cache files, and large catalog products should not
@@ -232,10 +199,115 @@ be committed. Public archive data should be re-downloadable through documented
 scripts. Small Phase 1 example figures/tables may be kept for portfolio and
 sanity-check purposes when they are clearly labeled as candidate-only outputs.
 
+## Phase 3: Injection-Recovery and Improved Detector
+
+Phase 3 builds a reproducible injection-recovery pipeline to measure how
+sensitive the improved asymmetric-dip detector is to synthetic exocomet-like
+signals injected into real TESS noise.
+
+These results measure detector sensitivity on synthetic signals.  They do NOT
+measure the purity of real candidates and do NOT confirm exocomet detections.
+
+### Run injection-recovery (dev subset)
+
+```bash
+python scripts/run_injection_recovery.py \
+  --sample catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --n-lightcurves 4 \
+  --n-injections 40 \
+  --max-lightcurves-per-star 1 \
+  --random-seed 42
+```
+
+### Run real-data scan (dev subset)
+
+```bash
+python scripts/run_scan.py \
+  --sample catalogs/target_sample_enriched.csv \
+  --max-targets 5 \
+  --max-lightcurves-per-star 1 \
+  --output results/tables/detector_candidate_events_dev.csv
+```
+
+Phase 3 outputs: `results/tables/injection_recovery.csv`,
+`results/tables/detector_candidate_events_dev.csv`,
+`results/figures/recovery_vs_depth.png`,
+`results/figures/recovery_heatmap_depth_duration.png`,
+`results/figures/example_injected_dip.png`.
+
+See [docs/PHASE3_INJECTION_RECOVERY.md](docs/PHASE3_INJECTION_RECOVERY.md) for
+full documentation including the dip model, feature definitions, and
+Phase 4 readiness notes.
+
+## Phase 4: Interpretable ML Event Ranker
+
+Phase 4 trains an XGBoost ranker on injection-recovery labels and applies it
+to real-data candidate events to produce a prioritisation score for review.
+
+**The ranker ranks events for review — it does not confirm exocomet detections.**
+Injection-trained AUC/F1 metrics describe synthetic-signal sensitivity, not
+real-data purity.
+
+### Run the ML ranker
+
+```bash
+python scripts/train_event_ranker.py \
+  --injection-table results/tables/injection_recovery.csv \
+  --candidate-table results/tables/detector_candidate_events_dev.csv \
+  --output-ranked results/tables/ranked_candidate_events_dev.csv \
+  --output-training results/tables/ml_training_features.csv \
+  --output-eval results/tables/ml_evaluation_summary.csv \
+  --random-seed 42 \
+  --test-size 0.25
+```
+
+Phase 4 outputs: `results/tables/ml_training_features.csv`,
+`results/tables/ml_evaluation_summary.csv`,
+`results/tables/ranked_candidate_events_dev.csv`,
+`results/figures/ml_feature_importance.png`,
+`results/figures/ml_precision_recall_curve.png`,
+`results/figures/ml_roc_curve.png`,
+`results/figures/candidate_score_distribution.png`.
+
+See [docs/PHASE4_ML_RANKER.md](docs/PHASE4_ML_RANKER.md) for full documentation.
+
+## Repository Structure
+
+```text
+src/astrohunter/
+  lightcurves.py      TESS search, download, cleaning, normalization, cache
+  asymmetry.py        Phase 1+3 dip detection and asymmetry feature extraction
+  injection.py        Synthetic dip injection and injection-recovery framework
+  features.py         Phase 4 feature engineering for the ML ranker
+  ml.py               Phase 4 ML ranker: training, evaluation, scoring
+  plotting.py         Matplotlib figure helpers (Phase 1 + Phase 3 + Phase 4)
+  catalogs.py         VizieR catalog loading and target-sample normalization
+  crossmatch.py       Coordinate matching and control-sample building
+scripts/
+  run_beta_pic_control.py
+  run_injection_recovery.py   Phase 3 injection-recovery CLI
+  run_scan.py                 Phase 3 real-data scan CLI
+  train_event_ranker.py       Phase 4 ML ranker training and candidate scoring
+  build_catalogs.py
+  build_control_pool_from_user_csv.py
+  verify_catalogs.py
+docs/
+  CLAIMS_POLICY.md
+  CONTROL_POOL_GUIDE.md
+  DATA_SOURCES.md
+  REPRODUCIBILITY.md
+  PROJECT_SCOPE.md
+  PHASE3_INJECTION_RECOVERY.md
+cache/lightcurves/   Parquet cache (git-ignored)
+results/figures/
+results/tables/
+tests/
+```
+
 ## Next Phases
 
-- Phase 2: build real debris-disk / IR-excess target and matched-control samples.
-- Phase 3: implement detector improvements and injection-recovery experiments.
-- Phase 4: add an ML event ranker after features and labels are stable.
-- Phase 5: implement vetting and rate-ratio statistics.
+- Phase 4: add an ML event ranker using injection-recovery labels and Phase 3 features.
+- Phase 5: implement vetting and rate-ratio statistics (target vs. control yield).
 - Phase 6: prepare a paper draft and claims/reproducibility audit.
