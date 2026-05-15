@@ -29,6 +29,14 @@ cache/
 .lightkurve-cache/
 mastDownload/
 
+# Catalog scratch space
+catalogs/raw/
+catalogs/cache/
+catalogs/**/*.vot
+catalogs/**/*.votable
+catalogs/**/*.fits
+catalogs/**/*.xml
+
 # Temporary logs
 *.log
 logs/

@@ -10,6 +10,7 @@ from astrohunter.plotting import (
     plot_event_window,
     plot_full_lightcurve,
     plot_lightcurve_with_events,
+    plot_target_control_balance,
     plot_zoom_window,
 )
 
@@ -37,3 +38,15 @@ def test_plotting_functions_create_files(tmp_path):
     for output in outputs:
         assert output.exists()
         assert output.stat().st_size > 0
+
+
+def test_plot_target_control_balance_creates_file(tmp_path):
+    targets = pd.DataFrame({"tmag": [8.0, 8.5], "bp_rp": [0.5, 0.6]})
+    controls = pd.DataFrame({"tmag": [8.1, 8.7, 8.4], "bp_rp": [0.55, 0.65, 0.58]})
+    output = tmp_path / "balance.png"
+
+    fig = plot_target_control_balance(targets, controls, ["tmag", "bp_rp"], output)
+    plt.close(fig)
+
+    assert output.exists()
+    assert output.stat().st_size > 0

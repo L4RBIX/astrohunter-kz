@@ -1,0 +1,15 @@
+metric,value,label
+n_rows,50,
+valid_ra_dec_count,50,
+tess_available_count,50,
+tic_matched_count,50,
+gaia_matched_count,45,
+placeholder_scientific_value_count,0,
+source_catalog_count,50,Cotten & Song 2016 table3
+missing_metadata_count,0,tic_id
+missing_metadata_count,5,gaia_dr3_source_id
+missing_metadata_count,0,tmag
+missing_metadata_count,5,bp_rp
+missing_metadata_count,6,parallax
+missing_metadata_count,0,has_tess_lightcurve
+missing_metadata_count,0,n_tess_products

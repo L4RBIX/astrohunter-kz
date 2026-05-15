@@ -113,3 +113,56 @@ def plot_lightcurve_with_events(time, flux, events_df, title, output_path=None):
     ax.grid(alpha=0.25)
     fig.tight_layout()
     return _finish_figure(fig, output_path)
+
+
+def plot_target_control_balance(target_df, control_df, columns, output_path=None):
+    """Plot side-by-side target/control numeric distributions."""
+    available_columns = []
+    for column in columns:
+        if column not in target_df.columns or column not in control_df.columns:
+            continue
+        target_values = pd.to_numeric(target_df[column], errors="coerce").dropna()
+        control_values = pd.to_numeric(control_df[column], errors="coerce").dropna()
+        if len(target_values) > 0 and len(control_values) > 0:
+            available_columns.append(column)
+
+    n_panels = max(1, len(available_columns))
+    fig, axes = plt.subplots(n_panels, 1, figsize=(8, 3.2 * n_panels))
+    axes = np.atleast_1d(axes)
+
+    if not available_columns:
+        axes[0].text(
+            0.5,
+            0.5,
+            "No shared numeric balance columns available",
+            ha="center",
+            va="center",
+            transform=axes[0].transAxes,
+        )
+        axes[0].set_axis_off()
+    else:
+        for ax, column in zip(axes, available_columns):
+            target_values = pd.to_numeric(target_df[column], errors="coerce").dropna()
+            control_values = pd.to_numeric(control_df[column], errors="coerce").dropna()
+            ax.hist(
+                target_values,
+                bins=min(12, max(3, len(target_values))),
+                alpha=0.6,
+                label="Targets",
+                color="tab:blue",
+            )
+            ax.hist(
+                control_values,
+                bins=min(12, max(3, len(control_values))),
+                alpha=0.6,
+                label="Controls",
+                color="tab:orange",
+            )
+            ax.set_title(f"Target/Control Balance: {column}")
+            ax.set_xlabel(column)
+            ax.set_ylabel("Count")
+            ax.grid(alpha=0.25)
+            ax.legend(loc="best")
+
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)

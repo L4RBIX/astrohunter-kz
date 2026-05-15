@@ -1,0 +1,51 @@
+target_name,source_catalog,ra_deg,dec_deg,sp_type,teff_catalog,disk_temperature,disk_radius,distance_pc,reference,sample_role
+HR 9102,Cotten & Song 2016 table3,1.0847083333333334,-29.268805555555556,A0V,8820,200,11.6,124.84,Su et al. 2006,disk_or_ir_excess_target
+HD 105,Cotten & Song 2016 table3,1.4693333333333332,-41.75325,G0V,6070,390,0.5,39.38,Zuckerman et al. 2004,disk_or_ir_excess_target
+HD 166,Cotten & Song 2016 table3,1.6547083333333334,29.020944444444442,K0V,5700,300,0.6,13.67,Bryden et al. 2006,disk_or_ir_excess_target
+HD 203,Cotten & Song 2016 table3,1.7090416666666668,-23.10761111111111,F3V,6710,160,6.0,39.38,Rebull et al. 2008,disk_or_ir_excess_target
+HD 377,Cotten & Song 2016 table3,2.1075,6.616805555555556,G2V,5910,200,2.1,39.07,Moor et al. 2006,disk_or_ir_excess_target
+sig And,Cotten & Song 2016 table3,4.581666666666666,36.78511111111111,A2V,8780,155,14.9,41.32,Morales et al. 2009,disk_or_ir_excess_target
+HD 1466,Cotten & Song 2016 table3,4.609458333333333,-63.47766666666667,F8V,6140,140,4.7,41.54,Smith et al. 2006,disk_or_ir_excess_target
+HD 1461,Cotten & Song 2016 table3,4.675708333333334,-8.053444444444445,G3V,5880,65,20.5,23.24,Lawler et al. 2009,disk_or_ir_excess_target
+9 Cet,Cotten & Song 2016 table3,5.715791666666666,-12.209416666666666,G3V,5920,40,48.5,20.86,Chen et al. 2014,disk_or_ir_excess_target
+kap Phe,Cotten & Song 2016 table3,6.551333333333334,-43.67963888888889,A5IV,8010,170,9.0,23.8,Rieke et al. 2005,disk_or_ir_excess_target
+HD 2834,Cotten & Song 2016 table3,7.854083333333335,-48.8035,A1V,8950,95,46.3,52.96,Chen et al. 2014,disk_or_ir_excess_target
+HD 2772,Cotten & Song 2016 table3,7.943166666666667,54.522277777777774,B8V,12230,400,7.6,115.74,Chen et al. 2005,disk_or_ir_excess_target
+bet03 Tuc,Cotten & Song 2016 table3,8.183458333333332,-63.03161111111111,A0V,9050,300,3.4,45.55,Song et al. 2001,disk_or_ir_excess_target
+HD 3126,Cotten & Song 2016 table3,8.613,-6.504138888888889,F4V,6380,200,2.9,40.91,Trilling et al. 2008,disk_or_ir_excess_target
+HD 3296,Cotten & Song 2016 table3,9.008458333333333,-5.571,:F5,6450,60,39.2,45.04,Trilling et al. 2008,disk_or_ir_excess_target
+HD 3670,Cotten & Song 2016 table3,9.736583333333332,-52.53433333333333,F5V,6440,290,1.5,83.12,Moor et al. 2011,disk_or_ir_excess_target
+64 Psc,Cotten & Song 2016 table3,12.244625000000001,16.940638888888888,F8V,6570,300,1.7,23.45,Koerner et al. 2010,disk_or_ir_excess_target
+HD 5133,Cotten & Song 2016 table3,13.254708333333332,-30.356916666666667,K2.5V,5170,30,45.7,14.17,Lawler et al. 2009,disk_or_ir_excess_target
+66 Psc,Cotten & Song 2016 table3,13.646791666666667,19.188333333333333,A1Vn,9340,250,8.7,108.1,Rhee et al. 2007,disk_or_ir_excess_target
+TYC2278-834-1,Cotten & Song 2016 table3,16.105416666666667,31.307694444444444,:K0,5310,260,0.7,62.89,,disk_or_ir_excess_target
+V443 And,Cotten & Song 2016 table3,17.674625000000002,42.931805555555556,G7V,5660,200,1.4,27.07,Kim et al. 2005,disk_or_ir_excess_target
+HR 333,Cotten & Song 2016 table3,18.071791666666666,79.67397222222223,A3V,8920,80,69.7,82.84,Jura et al. 2004,disk_or_ir_excess_target
+HD 7570,Cotten & Song 2016 table3,18.796333333333333,-45.531666666666666,F9VFe,6170,85,14.5,15.11,Beichman et al. 2006,disk_or_ir_excess_target
+HD 7590,Cotten & Song 2016 table3,19.121458333333333,42.93930555555555,G0-V,6090,200,1.9,23.19,Plavchan et al. 2009,disk_or_ir_excess_target
+2MASS J01203226-1128035,Cotten & Song 2016 table3,20.134791666666665,-11.468111111111112,G9V,5500,300,0.5,34.39,Carpenter et al. 2009,disk_or_ir_excess_target
+HD 8907,Cotten & Song 2016 table3,22.143416666666667,42.26744444444444,:F7,6250,50,45.0,34.77,Zuckerman et al. 2004,disk_or_ir_excess_target
+EO Psc,Cotten & Song 2016 table3,22.27041666666667,21.723166666666664,K2.5V,4930,70,11.1,23.73,Ballering et al. 2013,disk_or_ir_excess_target
+49 Cet,Cotten & Song 2016 table3,23.657666666666668,-15.67636111111111,A1V,8670,180,9.6,59.38,Oudmaijer et al. 1992,disk_or_ir_excess_target
+EX Cet,Cotten & Song 2016 table3,24.398249999999997,-6.760694444444445,G5V,5440,200,1.3,23.95,Plavchan et al. 2009,disk_or_ir_excess_target
+HD 10472,Cotten & Song 2016 table3,25.100624999999997,-60.99908333333333,F2IV/V,6610,200,3.4,67.24,Zuckerman et al. 2004,disk_or_ir_excess_target
+HD 10647,Cotten & Song 2016 table3,25.623041666666666,-53.741083333333336,F9V,6280,300,1.0,17.43,Zuckerman et al. 2004,disk_or_ir_excess_target
+tau Cet,Cotten & Song 2016 table3,26.017000000000003,-15.937472222222222,G8.5V,5750,500,0.2,3.65,Greaves et al. 2004,disk_or_ir_excess_target
+HD 10638,Cotten & Song 2016 table3,26.095250000000004,32.51569444444444,:A6,7470,65,49.8,69.3,Moor et al. 2006,disk_or_ir_excess_target
+HD 10939,Cotten & Song 2016 table3,26.526666666666667,-53.52186111111111,A1V,8960,200,10.7,62.03,Rhee et al. 2007,disk_or_ir_excess_target
+TYC8850-1468-1,Cotten & Song 2016 table3,28.532083333333333,-60.906638888888885,:K2,5040,185,1.2,92.95,,disk_or_ir_excess_target
+BD+20 307,Cotten & Song 2016 table3,28.709874999999997,21.306166666666666,:F9,6110,410,0.66,96.15,Song et al. 2005,disk_or_ir_excess_target
+DK Cet,Cotten & Song 2016 table3,29.454375,-21.90161111111111,G4V,5800,350,0.5,40.89,Hines et al. 2006,disk_or_ir_excess_target
+eps Tri,Cotten & Song 2016 table3,30.741499999999995,33.28408333333333,A2V,8630,200,16.6,120.04,Rhee et al. 2007,disk_or_ir_excess_target
+HD 13246,Cotten & Song 2016 table3,31.859375,-59.6795,F7V,6160,165,3.5,44.16,Moor et al. 2009,disk_or_ir_excess_target
+HD 12467,Cotten & Song 2016 table3,32.355041666666665,81.29602777777778,A1.5V,8140,200,7.4,70.57,Rhee et al. 2007,disk_or_ir_excess_target
+TYC3698-2277-1,Cotten & Song 2016 table3,33.88408333333333,59.24011111111111,:F0,6940,200,4.0,113.1,,disk_or_ir_excess_target
+gam Tri,Cotten & Song 2016 table3,34.32883333333333,33.84711111111111,A1V,8970,85,53.2,34.43,Zuckerman et al. 2004,disk_or_ir_excess_target
+HD 14082B,Cotten & Song 2016 table3,34.353291666666664,28.741611111111112,G2V,5910,220,1.1,27.33,Rebull et al. 2008,disk_or_ir_excess_target
+HD 15115,Cotten & Song 2016 table3,36.56804166666667,6.2924444444444445,:F3,6660,320,1.3,45.22,Zuckerman et al. 2004,disk_or_ir_excess_target
+AG Tri,Cotten & Song 2016 table3,36.87216666666667,30.973305555555555,K7V,4330,205,0.8,39.95,Rebull et al. 2008,disk_or_ir_excess_target
+phi For,Cotten & Song 2016 table3,37.007083333333334,-33.811027777777774,A2.5V,8630,100,30.2,46.59,Ballering et al. 2013,disk_or_ir_excess_target
+HD 15407,Cotten & Song 2016 table3,37.7115,55.548138888888886,F5V,6380,525,0.5,54.7,Oudmaijer et al. 1992,disk_or_ir_excess_target
+HD 15745,Cotten & Song 2016 table3,38.232708333333335,37.3335,:F2,6730,120,9.5,63.49,Zuckerman et al. 2004,disk_or_ir_excess_target
+HD 16743,Cotten & Song 2016 table3,39.781875,-52.934638888888884,F1III/IV,6850,200,4.3,58.85,Moor et al. 2006,disk_or_ir_excess_target
+33 Ari,Cotten & Song 2016 table3,40.17133333333333,27.060861111111112,A2/3V,8450,95,47.1,70.97,Trilling et al. 2007,disk_or_ir_excess_target

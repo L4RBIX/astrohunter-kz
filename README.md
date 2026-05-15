@@ -36,6 +36,25 @@ that the repository can:
 The strongest Phase 1 features may be instrumental/systematic and require
 quality-flag and multi-sector validation.
 
+## Phase 2 Current Status
+
+Phase 2 builds preliminary development catalogs from real public debris-disk /
+IR-excess sources. It creates a small target sample for pipeline development and
+keeps control-sample matching explicit and incomplete until a real non-disk
+candidate pool with TIC/Gaia/TESS metadata is available.
+
+These target/control files are preliminary development samples, not final science
+catalogs and not candidate-event results.
+
+Phase 2B adds TESS metadata enrichment and a real-control matching path. It can
+write `target_sample_enriched.csv` after metadata-only lightkurve/MAST searches.
+Matched controls are generated only from a real non-disk control pool supplied by
+the user or stored as `catalogs/control_pool.csv`.
+
+Phase 2C adds a clean derived target table and safe TIC/Gaia crossmatch hooks.
+The clean table keeps catalog values separate from crossmatch values and leaves
+TIC/Gaia scientific fields empty unless real remote matches are found.
+
 ## Relation to Prior TESS Exocomet Work
 
 AstroHunter KZ does not claim novelty from "AI discovers exocomets." Its
@@ -77,10 +96,88 @@ python scripts/run_beta_pic_control.py \
   --window-days 0.5
 ```
 
+## Build Phase 2 Development Catalogs
+
+```bash
+python scripts/build_catalogs.py --dev --max-targets 20 --output-dir catalogs
+```
+
+This writes `catalogs/target_sample.csv` when public VizieR queries succeed.
+`catalogs/control_sample.csv` and `catalogs/matched_pairs.csv` are written only
+when enough real non-disk control metadata is available. The current Phase 2
+builder does not fabricate controls.
+
+For TESS availability enrichment:
+
+```bash
+python scripts/build_catalogs.py \
+  --dev \
+  --max-targets 20 \
+  --output-dir catalogs \
+  --enrich-tess \
+  --max-enrich-targets 20
+```
+
+For the clean Phase 2C derived table:
+
+```bash
+python scripts/build_catalogs.py \
+  --dev \
+  --max-targets 20 \
+  --output-dir catalogs \
+  --enrich-tess \
+  --max-enrich-targets 20 \
+  --clean
+```
+
+Optional TIC/Gaia crossmatch hooks:
+
+```bash
+python scripts/build_catalogs.py \
+  --dev \
+  --max-targets 20 \
+  --output-dir catalogs \
+  --enrich-tess \
+  --max-enrich-targets 20 \
+  --crossmatch-tic \
+  --crossmatch-gaia \
+  --max-crossmatch-targets 20 \
+  --clean
+```
+
+Verify catalog completeness:
+
+```bash
+python scripts/verify_catalogs.py --catalog catalogs/target_sample_enriched.csv
+```
+
+For matching controls from a real user-provided pool:
+
+```bash
+python scripts/build_control_pool_from_user_csv.py path/to/user_control_pool.csv \
+  --output catalogs/control_pool.csv
+
+python scripts/build_catalogs.py \
+  --dev \
+  --max-targets 20 \
+  --output-dir catalogs \
+  --enrich-tess \
+  --max-enrich-targets 20 \
+  --build-controls \
+  --control-ratio 3 \
+  --control-pool-csv catalogs/control_pool.csv
+```
+
 ## Run the Notebook
 
 ```bash
 jupyter notebook notebooks/00_quickstart_beta_pic.ipynb
+```
+
+For Phase 2 catalog development:
+
+```bash
+jupyter notebook notebooks/01_catalog_build.ipynb
 ```
 
 The older proof-of-concept notebook is preserved as:
@@ -102,16 +199,26 @@ src/astrohunter/
   lightcurves.py      TESS search, download, cleaning, normalization helpers
   asymmetry.py        Candidate dip detection and simple asymmetry metrics
   plotting.py         Matplotlib figure helpers
+  catalogs.py         VizieR catalog loading and target-sample normalization
+  crossmatch.py       Small coordinate matching and placeholder crossmatch hooks
 scripts/
   run_beta_pic_control.py
+  build_catalogs.py
+  build_control_pool_from_user_csv.py
+  verify_catalogs.py
 notebooks/
   00_quickstart_beta_pic.ipynb
+  01_catalog_build.ipynb
   01_beta_pic_positive_control.ipynb
 docs/
   CLAIMS_POLICY.md
+  CONTROL_POOL_GUIDE.md
+  DATA_SOURCES.md
   REPRODUCIBILITY.md
   PROJECT_SCOPE.md
   MASTER_BLUEPRINT.md
+catalogs/
+  README.md
 results/
   figures/
   tables/
