@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,23 @@ import pandas as pd
 from astropy.stats import median_absolute_deviation
 
 logger = logging.getLogger(__name__)
+
+
+def _format_download_error(exc: BaseException, tic_id: int | str, author: str | None = None) -> str:
+    """Return a one-line rich error string including exception class, message, and traceback tip.
+
+    Logs the full traceback at DEBUG level so it is available in verbose runs
+    without cluttering normal pipeline output.
+    """
+    exc_class = type(exc).__name__
+    exc_msg = str(exc)
+    tb_str = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    short = f"{exc_class}: {exc_msg}"
+    logger.debug(
+        "Download error for TIC %s (author=%s).\n%s: %s\nTraceback:\n%s",
+        tic_id, author, exc_class, exc_msg, tb_str,
+    )
+    return short
 
 
 def _as_numpy(values: Any) -> np.ndarray:
@@ -219,8 +237,14 @@ def download_lightcurve_for_tic(
     """
     try:
         import lightkurve as lk
-    except ImportError:
-        logger.error("lightkurve is not installed; cannot download TIC %s.", tic_id)
+    except Exception as exc:  # noqa: BLE001 — catches SyntaxError/IndentationError in lk deps
+        short = _format_download_error(exc, tic_id)
+        logger.error(
+            "lightkurve import failed for TIC %s (%s). "
+            "Check .venv/lib/python*/site-packages/lightkurve/ for corrupted files. "
+            "Run: python scripts/debug_lightcurve_download.py --tic-id %s --verbose",
+            tic_id, short, tic_id,
+        )
         return None
 
     target_str = f"TIC {tic_id}"
@@ -238,7 +262,10 @@ def download_lightcurve_for_tic(
                 logger.debug("TIC %s: found %d products (author=%s).", tic_id, len(sr), author)
                 break
         except Exception as exc:  # noqa: BLE001
-            logger.debug("MAST search for TIC %s (author=%s) failed: %s", tic_id, author, exc)
+            logger.debug(
+                "MAST search for TIC %s (author=%s) failed: %s",
+                tic_id, author, _format_download_error(exc, tic_id, author=author),
+            )
 
     if search_result is None or len(search_result) == 0:
         logger.warning("No TESS products found for TIC %s.", tic_id)
@@ -248,7 +275,10 @@ def download_lightcurve_for_tic(
     try:
         collection = search_result[:n_download].download_all()
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Download failed for TIC %s: %s", tic_id, exc)
+        logger.warning(
+            "Download failed for TIC %s: %s",
+            tic_id, _format_download_error(exc, tic_id),
+        )
         return None
 
     if collection is None or len(collection) == 0:

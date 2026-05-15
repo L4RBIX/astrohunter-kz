@@ -1,2 +1,2 @@
 n_test,n_train_positive,n_train_negative,n_test_positive,n_test_negative,accuracy,ranker_version,model_type,feature_names,warning,precision,recall,f1,roc_auc,pr_auc,tn,fp,fn,tp,n_train
-10,19,11,6,4,1.0,phase4_v1,GradientBoostingClassifier,"depth_ppm, local_snr, noise_mad",,1.0,1.0,1.0,1.0,1.0,4,0,0,6,30
+10,19,11,6,4,0.8,phase4_v1,XGBClassifier,"depth_ppm, local_snr, noise_mad",,0.8333333333333334,0.8333333333333334,0.8333333333333334,0.9583333333333334,0.976190476190476,3,1,1,5,30

@@ -1,5 +1,67 @@
 # Reproducibility
 
+## Troubleshooting: `download_failed: IndentationError` / lightkurve import failure
+
+**Symptom:** The scan reports `download_failed: IndentationError: expected an
+indented block (__init__.py, line 7)` (or `SyntaxError`) for every star that
+does not have a cached light curve.  Cached downloads work; uncached ones fail.
+
+**Root cause:** A file in the installed lightkurve package was corrupted.
+In this repository's history the file was:
+
+```
+.venv/lib/python3.9/site-packages/lightkurve/prf/__init__.py
+```
+
+Line 7 contained a stray Cyrillic character (`ф`) at the start of the line
+instead of a 4-space indent, making the `except` block syntactically invalid.
+Python raises `IndentationError` when importing `lightkurve`, and because the
+old code only caught `ImportError`, the `IndentationError` propagated out of
+`download_lightcurve_for_tic` and appeared as `download_failed: ...` in the
+pipeline scan status.
+
+**Fix (applied 2026-05-16):**
+
+1. Identify the broken file by running the diagnostic script:
+
+   ```bash
+   python scripts/debug_lightcurve_download.py --tic-id 368404959 --verbose
+   ```
+
+   The full traceback shows the exact path of the broken `__init__.py`.
+
+2. Reinstall lightkurve to get a clean copy:
+
+   ```bash
+   pip install --force-reinstall lightkurve
+   ```
+
+   OR manually repair the file — remove the stray character and ensure the
+   line has 4-space indentation.
+
+3. Verify the import is clean:
+
+   ```bash
+   python -c "import lightkurve; print(lightkurve.__version__)"
+   ```
+
+**Code-level fix (also applied):** `download_lightcurve_for_tic` now catches
+`Exception` (not just `ImportError`) when importing lightkurve, so any
+future package corruption produces a clear `None` return with a logger.error
+message instead of crashing the pipeline.  The new `_format_download_error`
+helper logs the exception class, message, and full traceback at DEBUG level.
+
+**Verify with diagnostic:**
+
+```bash
+python scripts/debug_lightcurve_download.py --tic-id <TIC_ID> --max-lightcurves 1 --verbose
+```
+
+This prints Python version, sys.path, lightkurve/astroquery versions, full
+traceback on import failure, MAST search product counts, and download results.
+
+---
+
 Phase 1 is designed to run from a clean clone without private API keys.
 
 ```bash
