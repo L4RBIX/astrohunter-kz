@@ -1,0 +1,19 @@
+{
+  "tic_id": "436840249",
+  "target_name": "33 Ari",
+  "sample_role": "target",
+  "recommended_review_priority": "overtriggered_review",
+  "inspection_reasons": [
+    "overtriggered_top5",
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 5,
+  "n_pass_vetting": 0,
+  "max_local_snr": 9.000894003769465,
+  "max_final_candidate_score": 0.7145810126524916,
+  "ra_deg": 40.17133333333333,
+  "dec_deg": 27.060861111111112,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:02.451460+00:00"
+}

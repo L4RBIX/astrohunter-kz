@@ -552,8 +552,101 @@ results/tables/
 tests/
 ```
 
+## Phase 5F: Manual Review Gallery and Candidate Inspection Package
+
+Phase 5F converts the Phase 5E consolidated tables into visual inspection
+materials — per-event light-curve plots, a disposition template, and a priority
+overview figure — so a human reviewer can assess each candidate.
+
+**Visual review does NOT confirm exocomet detections.**
+**Disposition labels are preliminary.**
+**TIC 444335503 (control, 20 events) must be treated as likely overtriggered.**
+**Final paper/report requires completed review and expert validation.**
+
+### Run the gallery builder
+
+```bash
+python scripts/build_manual_review_gallery.py \
+  --candidate-table results/tables/full_matched_external_checked_candidates.csv \
+  --priority-table results/tables/full_matched_manual_review_priority.csv \
+  --star-summary results/tables/full_matched_star_level_summary.csv \
+  --overtriggered results/tables/full_matched_overtriggered_stars.csv \
+  --output-dir results/candidates/manual_review_gallery \
+  --disposition-output results/tables/full_matched_manual_review_disposition_template.csv \
+  --inspection-targets-output results/tables/full_matched_inspection_targets.csv \
+  --max-events-per-star 5 \
+  --window-days 1.0
+```
+
+Phase 5F outputs:
+`results/tables/full_matched_inspection_targets.csv` (41 events, 18 TICs),
+`results/tables/full_matched_manual_review_disposition_template.csv` (41 rows),
+`results/figures/manual_review_priority_overview.png`,
+`results/candidates/manual_review_gallery/tic_{tic_id}/` (18 gallery folders,
+59 plots total, all with cached light curves).
+
+See [docs/PHASE5F_MANUAL_REVIEW_GALLERY.md](docs/PHASE5F_MANUAL_REVIEW_GALLERY.md)
+for the disposition label guide, per-TIC inspection notes, and how to proceed
+with manual review.
+
+## Repository Structure
+
+```text
+src/astrohunter/
+  lightcurves.py      TESS search, download, cleaning, normalization, cache
+  asymmetry.py        Phase 1+3 dip detection and asymmetry feature extraction
+  injection.py        Synthetic dip injection and injection-recovery framework
+  features.py         Phase 4 feature engineering for the ML ranker
+  ml.py               Phase 4 ML ranker: training, evaluation, scoring
+  vetting.py          Phase 5 automated vetting flags
+  stats.py            Phase 5 candidate yield rate statistics
+  consolidation.py    Phase 5E star-level summaries and review prioritisation
+  inspection.py       Phase 5F inspection target selection and gallery creation
+  plotting.py         Matplotlib figure helpers (Phase 1–5F)
+  catalogs.py         VizieR catalog loading and target-sample normalization
+  crossmatch.py       Coordinate matching and control-sample building
+scripts/
+  run_beta_pic_control.py
+  run_injection_recovery.py    Phase 3 injection-recovery CLI
+  run_scan.py                  Phase 3 real-data scan CLI
+  train_event_ranker.py        Phase 4 ML ranker training and candidate scoring
+  run_vetting.py               Phase 5 automated vetting CLI
+  run_stats.py                 Phase 5 rate statistics CLI
+  run_matched_scan.py          Phase 5B matched target+control scan CLI
+  rank_matched_scan.py         Phase 5B ML ranking for matched-scan candidates
+  run_external_vetting.py      Phase 5C external catalog crossmatch vetting
+  run_full_matched_pipeline.py Phase 5D full matched survey orchestrator
+  consolidate_candidates.py    Phase 5E consolidation and manual review package
+  build_manual_review_gallery.py Phase 5F gallery and disposition template
+  build_catalogs.py
+  build_control_pool_from_user_csv.py
+  verify_catalogs.py
+docs/
+  CLAIMS_POLICY.md
+  CONTROL_POOL_GUIDE.md
+  DATA_SOURCES.md
+  REPRODUCIBILITY.md
+  PROJECT_SCOPE.md
+  PHASE3_INJECTION_RECOVERY.md
+  PHASE4_ML_RANKER.md
+  PHASE5_VETTING_STATISTICS.md
+  PHASE5B_MATCHED_SCAN.md
+  PHASE5C_EXTERNAL_VETTING.md
+  PHASE5D_FULL_MATCHED_RUN.md
+  PHASE5E_CANDIDATE_CONSOLIDATION.md
+  PHASE5F_MANUAL_REVIEW_GALLERY.md
+cache/lightcurves/   Parquet cache (git-ignored)
+results/candidates/  Manual review gallery outputs
+results/figures/
+results/tables/
+tests/
+```
+
 ## Next Phases
 
-- Phase 6: manual light-curve inspection for all review-priority candidates
-  (starting with the 2 medium-priority TICs), additional external catalog checks
-  (Gaia variability, ASAS-SN, ZTF), multi-sector confirmation, and paper draft.
+- Manual review: fill in the disposition template for all 18 inspection TICs
+  (start with TIC 444335503 for variability check, then the 2 medium-priority
+  TICs: TIC 234309613 and HD 203).
+- Phase 6: multi-sector confirmation for any `keep_candidate` events,
+  additional external catalog checks (Gaia variability, ASAS-SN, ZTF),
+  and paper/report draft.

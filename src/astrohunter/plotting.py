@@ -1,4 +1,4 @@
-"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1–5E)."""
+"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1–5F)."""
 
 from __future__ import annotations
 
@@ -1241,4 +1241,177 @@ def plot_pass_candidates_by_role(
     note = "Pass = automated vetting only. All candidates require manual review."
     fig.text(0.5, -0.04, note, ha="center", fontsize=8, color="darkred", style="italic")
     fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+# ---------------------------------------------------------------------------
+# Phase 5F: Manual review overview
+# ---------------------------------------------------------------------------
+
+def plot_manual_review_priority_overview(
+    star_summary_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Phase 5F Manual Review — Priority Overview",
+) -> "plt.Figure":
+    """Three-panel overview figure for the manual review package.
+
+    Panel 1 (top left):  Priority counts as a grouped bar (target vs control).
+    Panel 2 (top right): Score distribution histogram coloured by priority.
+    Panel 3 (bottom):    Scatter of n_events vs max_final_candidate_score,
+                         coloured by priority, shaped by sample_role.
+
+    SCIENTIFIC CAUTION: Priority labels are heuristic classifiers, not
+    scientific verdicts.  This figure is for visual triage only.
+
+    Parameters
+    ----------
+    star_summary_df:
+        Star-level summary table from Phase 5E.
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    priority_order = ["high", "medium", "low", "overtriggered_review"]
+    priority_colors = {
+        "high": "#1565C0",
+        "medium": "#558B2F",
+        "low": "#9E9E9E",
+        "overtriggered_review": "#B71C1C",
+    }
+    role_markers = {"target": "o", "control": "s"}
+
+    fig = plt.figure(figsize=(14, 9))
+    gs = fig.add_gridspec(2, 2, hspace=0.45, wspace=0.35)
+    ax_bar = fig.add_subplot(gs[0, 0])
+    ax_hist = fig.add_subplot(gs[0, 1])
+    ax_scatter = fig.add_subplot(gs[1, :])
+
+    empty = star_summary_df.empty or "recommended_review_priority" not in star_summary_df.columns
+
+    # --- Panel 1: grouped priority counts by role ---
+    roles = ["target", "control"]
+    role_col = "sample_role" if "sample_role" in star_summary_df.columns else None
+    pri_col = "recommended_review_priority"
+
+    bar_data: dict[str, list[int]] = {r: [] for r in roles}
+    for pri in priority_order:
+        for role in roles:
+            if empty or role_col is None:
+                bar_data[role].append(0)
+            else:
+                n = int(((star_summary_df[pri_col] == pri) & (star_summary_df[role_col] == role)).sum())
+                bar_data[role].append(n)
+
+    x = np.arange(len(priority_order))
+    w = 0.35
+    ax_bar.bar(x - w / 2, bar_data["target"], w, label="Target", color="#1565C0", alpha=0.8)
+    ax_bar.bar(x + w / 2, bar_data["control"], w, label="Control", color="#E65100", alpha=0.8)
+    ax_bar.set_xticks(x)
+    ax_bar.set_xticklabels(
+        [p.replace("_review", "\nreview") for p in priority_order], fontsize=9
+    )
+    ax_bar.set_ylabel("Number of TICs", fontsize=9)
+    ax_bar.set_title("Priority counts by sample role", fontsize=10)
+    ax_bar.legend(fontsize=8)
+    ax_bar.grid(axis="y", alpha=0.25)
+
+    # --- Panel 2: score distribution by priority ---
+    score_col = "max_final_candidate_score"
+    if not empty and score_col in star_summary_df.columns:
+        for pri in priority_order:
+            subset = star_summary_df[star_summary_df[pri_col] == pri]
+            scores = pd.to_numeric(subset[score_col], errors="coerce").dropna()
+            if not scores.empty:
+                ax_hist.hist(
+                    scores,
+                    bins=10,
+                    alpha=0.6,
+                    color=priority_colors.get(pri, "gray"),
+                    label=pri,
+                    edgecolor="white",
+                )
+    else:
+        ax_hist.text(0.5, 0.5, "No score data", ha="center", va="center",
+                     transform=ax_hist.transAxes)
+    ax_hist.set_xlabel("Max candidate score", fontsize=9)
+    ax_hist.set_ylabel("Number of TICs", fontsize=9)
+    ax_hist.set_title("Score distribution by priority", fontsize=10)
+    handles, labels = ax_hist.get_legend_handles_labels()
+    if handles:
+        ax_hist.legend(handles, labels, fontsize=8, loc="upper left")
+    ax_hist.grid(alpha=0.25)
+
+    # --- Panel 3: n_events vs max_score scatter ---
+    n_events_col = "n_events"
+    if (
+        not empty
+        and score_col in star_summary_df.columns
+        and n_events_col in star_summary_df.columns
+    ):
+        for pri in priority_order:
+            for role in roles:
+                mask = star_summary_df[pri_col] == pri
+                if role_col:
+                    mask &= star_summary_df[role_col] == role
+                subset = star_summary_df[mask]
+                if subset.empty:
+                    continue
+                x_vals = pd.to_numeric(subset[n_events_col], errors="coerce")
+                y_vals = pd.to_numeric(subset[score_col], errors="coerce")
+                ax_scatter.scatter(
+                    x_vals, y_vals,
+                    c=priority_colors.get(pri, "gray"),
+                    marker=role_markers.get(role, "o"),
+                    s=70,
+                    alpha=0.85,
+                    edgecolors="k",
+                    linewidths=0.4,
+                    label=f"{pri} / {role}" if role == "target" else None,
+                    zorder=3,
+                )
+        # Label TICs with highest event counts
+        if "tic_id" in star_summary_df.columns:
+            top = star_summary_df.nlargest(5, n_events_col)
+            for _, row in top.iterrows():
+                xv = float(row.get(n_events_col, 0))
+                yv = float(row.get(score_col, 0)) if pd.notna(row.get(score_col)) else 0.0
+                name = row.get("target_name", f"TIC {row['tic_id']}")
+                ax_scatter.annotate(
+                    str(name), (xv, yv),
+                    textcoords="offset points", xytext=(5, 3),
+                    fontsize=7, color="black",
+                )
+    else:
+        ax_scatter.text(0.5, 0.5, "Insufficient data for scatter", ha="center",
+                        va="center", transform=ax_scatter.transAxes)
+    ax_scatter.set_xlabel("Total events on star", fontsize=9)
+    ax_scatter.set_ylabel("Max candidate score", fontsize=9)
+    ax_scatter.set_title(
+        "Events per star vs. top score  (○ = target, □ = control)", fontsize=10
+    )
+    ax_scatter.grid(alpha=0.2)
+    # Build legend for priority colours
+    from matplotlib.lines import Line2D
+    legend_handles = [
+        Line2D([0], [0], marker="o", color="w",
+               markerfacecolor=priority_colors.get(p, "gray"),
+               markersize=8, label=p)
+        for p in priority_order
+    ] + [
+        Line2D([0], [0], marker="o", color="gray", markersize=8,
+               linestyle="None", label="target (○)"),
+        Line2D([0], [0], marker="s", color="gray", markersize=8,
+               linestyle="None", label="control (□)"),
+    ]
+    ax_scatter.legend(handles=legend_handles, fontsize=8, ncol=3, loc="upper right")
+
+    fig.suptitle(title, fontsize=12, y=1.01)
+    note = "Priority labels are heuristic — not scientific verdicts.  All candidates require manual review."
+    fig.text(0.5, -0.02, note, ha="center", fontsize=8, color="darkred", style="italic")
+    fig.subplots_adjust(top=0.90, bottom=0.10, hspace=0.45, wspace=0.35)
     return _finish_figure(fig, output_path)

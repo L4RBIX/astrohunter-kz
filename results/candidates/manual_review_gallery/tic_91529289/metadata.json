@@ -1,0 +1,18 @@
+{
+  "tic_id": "91529289",
+  "target_name": "phi For",
+  "sample_role": "target",
+  "recommended_review_priority": "low",
+  "inspection_reasons": [
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 1,
+  "n_pass_vetting": 0,
+  "max_local_snr": 5.253358787002111,
+  "max_final_candidate_score": 0.607827765805983,
+  "ra_deg": 37.007083333333334,
+  "dec_deg": -33.811027777777774,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:04.858020+00:00"
+}

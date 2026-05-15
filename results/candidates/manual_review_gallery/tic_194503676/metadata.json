@@ -1,0 +1,19 @@
+{
+  "tic_id": "194503676",
+  "target_name": "sig And",
+  "sample_role": "target",
+  "recommended_review_priority": "overtriggered_review",
+  "inspection_reasons": [
+    "overtriggered_top5",
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 5,
+  "n_pass_vetting": 0,
+  "max_local_snr": 4.666188566094137,
+  "max_final_candidate_score": 0.6111456571117281,
+  "ra_deg": 4.581666666666666,
+  "dec_deg": 36.78511111111111,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:04.292653+00:00"
+}

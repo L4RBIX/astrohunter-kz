@@ -1,0 +1,19 @@
+{
+  "tic_id": "229012143",
+  "target_name": "HD 203",
+  "sample_role": "target",
+  "recommended_review_priority": "medium",
+  "inspection_reasons": [
+    "medium_priority",
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 1,
+  "n_pass_vetting": 0,
+  "max_local_snr": 3.963977919851635,
+  "max_final_candidate_score": 0.6567983238013676,
+  "ra_deg": 1.7090416666666668,
+  "dec_deg": -23.10761111111111,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:12:59.944881+00:00"
+}

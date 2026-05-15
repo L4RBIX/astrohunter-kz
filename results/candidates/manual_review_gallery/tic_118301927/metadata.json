@@ -1,0 +1,18 @@
+{
+  "tic_id": "118301927",
+  "target_name": "HD 14082B",
+  "sample_role": "target",
+  "recommended_review_priority": "low",
+  "inspection_reasons": [
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 1,
+  "n_pass_vetting": 0,
+  "max_local_snr": 5.79524228732157,
+  "max_final_candidate_score": 0.6327228798188479,
+  "ra_deg": 34.353291666666664,
+  "dec_deg": 28.741611111111112,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:04.549312+00:00"
+}

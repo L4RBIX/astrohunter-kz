@@ -1,0 +1,18 @@
+{
+  "tic_id": "229142326",
+  "target_name": "HD 10939",
+  "sample_role": "target",
+  "recommended_review_priority": "low",
+  "inspection_reasons": [
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 1,
+  "n_pass_vetting": 0,
+  "max_local_snr": 4.3626407110554855,
+  "max_final_candidate_score": 0.5854674164737965,
+  "ra_deg": 26.526666666666667,
+  "dec_deg": -53.52186111111111,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:05.967598+00:00"
+}

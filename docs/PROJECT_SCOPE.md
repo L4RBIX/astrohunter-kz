@@ -199,6 +199,51 @@ and three diagnostic figures.
 See [docs/PHASE5E_CANDIDATE_CONSOLIDATION.md](PHASE5E_CANDIDATE_CONSOLIDATION.md) for
 full documentation.
 
+## Phase 5F: Manual Review Gallery and Candidate Inspection Package (complete)
+
+Convert the Phase 5E consolidated tables into a visual inspection package:
+per-event light-curve plots, per-TIC gallery folders, an inspection target
+table, a blank manual disposition template, and a manual-review priority
+overview figure.
+
+Constraints:
+- Visual inspection is NOT confirmation of exocomet detections.
+- Manual disposition labels are preliminary review metadata, not final
+  scientific classifications.
+- Automated pass status remains suspect until checked visually and against
+  external catalogs, systematics, and multi-sector behaviour.
+- TIC 444335503 is a control star with many repeated triggers and must be
+  treated as likely overtriggered until every event is inspected.
+- The paper/report must not turn Phase 5F review materials into discovery
+  claims.
+
+Key additions:
+- `inspection.py`: inspection target selection, cached light-curve loading,
+  event-window extraction, per-event plots, per-star galleries, and
+  disposition-template generation.
+- `build_manual_review_gallery.py`: command-line builder for the Phase 5F
+  inspection package.
+- `plot_manual_review_priority_overview()`: diagnostic summary figure for
+  priority, role, score, and overtriggering patterns.
+- `full_matched_inspection_targets.csv`: selected events for visual review.
+- `full_matched_manual_review_disposition_template.csv`: blank review sheet
+  with controlled manual-label options.
+
+Phase 5F run results (2026-05-16):
+- 18 TICs selected for inspection.
+- 41 candidate events selected.
+- 59 gallery plots generated from cached light curves.
+- Selection includes pass-vetting events, medium-priority stars,
+  top overtriggered stars, and one top event per target star.
+
+Outputs: `results/tables/full_matched_inspection_targets.csv`,
+`results/tables/full_matched_manual_review_disposition_template.csv`,
+`results/figures/manual_review_priority_overview.png`, and
+`results/candidates/manual_review_gallery/tic_{tic_id}/`.
+
+See [docs/PHASE5F_MANUAL_REVIEW_GALLERY.md](PHASE5F_MANUAL_REVIEW_GALLERY.md)
+for full documentation.
+
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 
 Prepare a transparent methods/results draft, archive reproducible tables, audit

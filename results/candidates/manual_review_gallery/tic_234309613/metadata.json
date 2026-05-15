@@ -1,0 +1,18 @@
+{
+  "tic_id": "234309613",
+  "target_name": "TIC 234309613",
+  "sample_role": "control",
+  "recommended_review_priority": "medium",
+  "inspection_reasons": [
+    "medium_priority"
+  ],
+  "n_events_in_inspection": 4,
+  "n_pass_vetting": 0,
+  "max_local_snr": 6.535168687367065,
+  "max_final_candidate_score": 0.5900519253396723,
+  "ra_deg": 35.4372525532317,
+  "dec_deg": -68.6594136153249,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:00.674373+00:00"
+}

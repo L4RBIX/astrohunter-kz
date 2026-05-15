@@ -458,3 +458,37 @@ Consolidation is NOT confirmation of exocomet detections.  Priority labels
 are heuristic — all candidates require manual inspection.  Pass candidates
 on overtriggered stars are particularly suspect.
 See `docs/PHASE5E_CANDIDATE_CONSOLIDATION.md` for full documentation.
+
+## Phase 5F: Manual Review Gallery
+
+Build the visual inspection package from the Phase 5E consolidated tables.
+
+```bash
+python scripts/build_manual_review_gallery.py \
+  --candidate-table results/tables/full_matched_external_checked_candidates.csv \
+  --priority-table results/tables/full_matched_manual_review_priority.csv \
+  --star-summary results/tables/full_matched_star_level_summary.csv \
+  --overtriggered results/tables/full_matched_overtriggered_stars.csv \
+  --output-dir results/candidates/manual_review_gallery \
+  --disposition-output results/tables/full_matched_manual_review_disposition_template.csv \
+  --inspection-targets-output results/tables/full_matched_inspection_targets.csv \
+  --max-events-per-star 5 \
+  --window-days 1.0
+```
+
+Expected Phase 5F outputs:
+
+- `results/tables/full_matched_inspection_targets.csv`
+- `results/tables/full_matched_manual_review_disposition_template.csv`
+- `results/figures/manual_review_priority_overview.png`
+- `results/candidates/manual_review_gallery/tic_{tic_id}/` (one per inspection TIC)
+  - `tic_{tic_id}_full_lc_with_events.png`
+  - `event_{i:02d}_BTJD{time:.3f}.png`
+  - `events_summary.csv`
+  - `metadata.json`
+
+Visual review does NOT confirm exocomet detections.  Disposition labels
+are preliminary.  TIC 444335503 must be treated as likely overtriggered until
+its light curve has been inspected for periodic variability.
+See `docs/PHASE5F_MANUAL_REVIEW_GALLERY.md` for the disposition label guide
+and interpretation notes.

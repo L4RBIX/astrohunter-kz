@@ -1,0 +1,18 @@
+{
+  "tic_id": "435680540",
+  "target_name": "HR 333",
+  "sample_role": "target",
+  "recommended_review_priority": "low",
+  "inspection_reasons": [
+    "target_top_event"
+  ],
+  "n_events_in_inspection": 1,
+  "n_pass_vetting": 0,
+  "max_local_snr": 2.8146978985480184,
+  "max_final_candidate_score": 0.5583954413647283,
+  "ra_deg": 18.071791666666662,
+  "dec_deg": 79.67397222222223,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:07.106109+00:00"
+}

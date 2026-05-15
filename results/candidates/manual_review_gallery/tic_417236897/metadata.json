@@ -1,0 +1,18 @@
+{
+  "tic_id": "417236897",
+  "target_name": "TIC 417236897",
+  "sample_role": "control",
+  "recommended_review_priority": "overtriggered_review",
+  "inspection_reasons": [
+    "overtriggered_top5"
+  ],
+  "n_events_in_inspection": 5,
+  "n_pass_vetting": 0,
+  "max_local_snr": 5.375763086739589,
+  "max_final_candidate_score": 0.6112550781639379,
+  "ra_deg": 17.7113956128308,
+  "dec_deg": 67.7801243887217,
+  "has_cached_lightcurve": true,
+  "gallery_version": "phase5f_v1",
+  "generated_at": "2026-05-15T22:13:03.352929+00:00"
+}
