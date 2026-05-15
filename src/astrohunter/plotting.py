@@ -1,4 +1,4 @@
-"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1 + Phase 3 + Phase 4 + Phase 5)."""
+"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1–5C)."""
 
 from __future__ import annotations
 
@@ -852,5 +852,212 @@ def plot_vetting_flag_counts(
         ha="center", fontsize=8, color="gray",
     )
 
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+
+def plot_external_catalog_flag_counts(
+    candidate_df: pd.DataFrame,
+    output_path=None,
+    title: str = "External Catalog Check Results",
+) -> "plt.Figure":
+    """Two-panel figure summarising Phase 5C external crossmatch results.
+
+    Left panel: status counts (matched / not_found / failed / not_attempted)
+    for each catalog (VSX, SIMBAD, TESS-EB).
+
+    Right panel: horizontal bar chart of external_false_positive_flag values.
+
+    External catalog checks reduce false positives but do NOT confirm
+    exocomet detections.  A 'not_found' status does NOT prove astrophysical
+    validity.  Failed queries must be re-run with network access.
+
+    Parameters
+    ----------
+    candidate_df:
+        Candidate DataFrame after external_check_candidate_table().
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    # --- Left: catalog status stacked bar ---
+    ax_status = axes[0]
+
+    catalogs = ["VSX", "SIMBAD", "TESS-EB"]
+    status_cols = ["vsx_check_status", "simbad_check_status", "tess_eb_check_status"]
+    status_labels = ["matched", "not_found", "failed", "not_attempted"]
+    status_colors = ["tab:blue", "tab:green", "tab:red", "lightgray"]
+
+    has_any_data = any(c in candidate_df.columns for c in status_cols)
+
+    if not has_any_data or candidate_df.empty:
+        ax_status.text(0.5, 0.5, "No external check data",
+                       ha="center", va="center", transform=ax_status.transAxes)
+        ax_status.set_title("Catalog check status")
+    else:
+        x = np.arange(len(catalogs))
+        bottoms = np.zeros(len(catalogs))
+        for sl, sc in zip(status_labels, status_colors):
+            vals = []
+            for col in status_cols:
+                if col in candidate_df.columns:
+                    vals.append(int((candidate_df[col] == sl).sum()))
+                else:
+                    vals.append(0)
+            bars = ax_status.bar(x, vals, bottom=bottoms, color=sc,
+                                 label=sl, edgecolor="white", width=0.55)
+            bottoms += np.array(vals, dtype=float)
+
+        ax_status.set_xticks(x)
+        ax_status.set_xticklabels(catalogs)
+        ax_status.set_ylabel("Candidate count")
+        ax_status.set_title("Catalog check status")
+        ax_status.legend(loc="upper right", fontsize=8, title="status")
+        ax_status.grid(axis="y", alpha=0.25)
+
+    # --- Right: false-positive flag bar chart ---
+    ax_fp = axes[1]
+    fp_col = "external_false_positive_flag"
+
+    if fp_col not in candidate_df.columns or candidate_df.empty:
+        ax_fp.text(0.5, 0.5, "No external flag data",
+                   ha="center", va="center", transform=ax_fp.transAxes)
+        ax_fp.set_title("External false-positive flags")
+    else:
+        fp_counts = candidate_df[fp_col].value_counts()
+        labels = [str(v).replace("_", " ") for v in fp_counts.index]
+        counts = fp_counts.values
+
+        concern_flags = {
+            "possible eclipsing binary match",
+            "known variable match",
+            "simbad nonstellar or problematic type",
+        }
+        colors = [
+            "tab:orange" if lb in concern_flags else
+            ("tab:red" if "failed" in lb else "tab:gray")
+            for lb in labels
+        ]
+
+        y_pos = np.arange(len(labels))
+        bars = ax_fp.barh(y_pos, counts, color=colors, edgecolor="white", height=0.6)
+        for bar, count in zip(bars, counts):
+            ax_fp.text(
+                bar.get_width() + 0.05,
+                bar.get_y() + bar.get_height() / 2,
+                str(count),
+                va="center", ha="left", fontsize=9,
+            )
+        ax_fp.set_yticks(y_pos)
+        ax_fp.set_yticklabels(labels, fontsize=8)
+        ax_fp.set_xlabel("Number of candidates")
+        ax_fp.set_title("External false-positive flags")
+        ax_fp.invert_yaxis()
+        ax_fp.set_xlim(0, max(counts) + 1)
+        ax_fp.grid(axis="x", alpha=0.25)
+
+    fig.suptitle(title, fontsize=11)
+    note = (
+        "Catalog matches indicate possible contamination — NOT definitive rejection.\n"
+        "'not_found' does NOT confirm astrophysical validity. "
+        "Manual inspection required."
+    )
+    fig.text(0.5, -0.06, note, ha="center", fontsize=8, color="gray",
+             style="italic")
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+def plot_target_control_candidate_counts(
+    candidate_df: pd.DataFrame,
+    summary_df: pd.DataFrame | None = None,
+    output_path=None,
+    title: str = "Candidate Counts: Target vs. Control",
+) -> "plt.Figure":
+    """Bar chart comparing target vs. control candidate counts and rates.
+
+    Shows raw candidate counts by role and, when summary_df is provided,
+    overlays the rate (candidates per star) with Poisson CI error bars.
+
+    Parameters
+    ----------
+    candidate_df:
+        Candidate DataFrame with a ``sample_role`` column.
+    summary_df:
+        Optional rate-ratio summary DataFrame from ``summarize_rate_statistics()``.
+    output_path:
+        Optional file path to save the figure.
+    title:
+        Figure title.
+
+    Returns
+    -------
+    matplotlib Figure
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    # --- Left panel: raw counts ---
+    ax_counts = axes[0]
+    roles = ["target", "control"]
+    colors = ["tab:blue", "tab:orange"]
+
+    if "sample_role" in candidate_df.columns and not candidate_df.empty:
+        counts = [int((candidate_df["sample_role"] == r).sum()) for r in roles]
+    else:
+        counts = [0, 0]
+
+    bars = ax_counts.bar(roles, counts, color=colors, edgecolor="white", width=0.5)
+    for bar, count in zip(bars, counts):
+        ax_counts.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.05,
+            str(count),
+            ha="center", va="bottom", fontsize=11,
+        )
+    ax_counts.set_ylabel("Candidate count")
+    ax_counts.set_title("Raw candidate counts")
+    ax_counts.set_ylim(0, max(counts + [1]) * 1.4)
+    ax_counts.grid(axis="y", alpha=0.25)
+
+    # --- Right panel: rates with CI ---
+    ax_rate = axes[1]
+    if summary_df is not None and not summary_df.empty:
+        row = summary_df.iloc[0]  # use first subset (all_candidates)
+        rates = [
+            row.get("target_rate", float("nan")),
+            row.get("control_rate", float("nan")),
+        ]
+        ci_lo = [
+            max(0, row.get("target_rate", 0) - row.get("target_rate_ci_lo", 0)),
+            max(0, row.get("control_rate", 0) - row.get("control_rate_ci_lo", 0)),
+        ]
+        ci_hi = [
+            max(0, row.get("target_rate_ci_hi", 0) - row.get("target_rate", 0)),
+            max(0, row.get("control_rate_ci_hi", 0) - row.get("control_rate", 0)),
+        ]
+        x = np.arange(len(roles))
+        ax_rate.bar(x, rates, color=colors, edgecolor="white", width=0.5, alpha=0.7)
+        ax_rate.errorbar(x, rates, yerr=[ci_lo, ci_hi], fmt="none",
+                         color="black", capsize=6, linewidth=1.5)
+        ax_rate.set_xticks(x)
+        ax_rate.set_xticklabels(roles)
+    else:
+        ax_rate.text(0.5, 0.5, "No rate data", ha="center", va="center", transform=ax_rate.transAxes)
+
+    ax_rate.set_ylabel("Candidate rate (per star)  ±  95% Poisson CI")
+    ax_rate.set_title("Candidate yield rate")
+    ax_rate.grid(axis="y", alpha=0.25)
+
+    fig.suptitle(title, fontsize=12)
+    note = "PRELIMINARY — not a scientific claim. Full survey required."
+    fig.text(0.5, -0.04, note, ha="center", fontsize=8, color="darkred", style="italic")
     fig.tight_layout()
     return _finish_figure(fig, output_path)

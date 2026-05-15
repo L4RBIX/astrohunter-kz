@@ -313,6 +313,99 @@ Phase 5 outputs: `results/tables/vetted_candidate_events_dev.csv`,
 
 See [docs/PHASE5_VETTING_STATISTICS.md](docs/PHASE5_VETTING_STATISTICS.md) for full documentation.
 
+## Phase 5B: Matched Target/Control Scan
+
+Phase 5B runs the Phase 3 detector across all matched target and control stars
+simultaneously, then reruns ML ranking, automated vetting, and rate statistics
+on the combined candidate table.
+
+**Matched-scan statistics are PRELIMINARY.**
+**Candidates are NOT confirmed exocomets.**
+**Rate ratios with wide Poisson CIs indicate insufficient data, not equivalence.**
+External catalog crossmatches (EB, VSX, SIMBAD) are not implemented.
+Full paper still requires manual vetting and external catalog checks.
+
+### Run the matched scan
+
+```bash
+# Step 1: Scan all matched target + control stars
+python scripts/run_matched_scan.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --output results/tables/detector_candidate_events_matched_scan.csv \
+  --max-pairs 28 \
+  --max-lightcurves-per-star 1 \
+  --sigma-threshold 4.0
+
+# Step 2: ML ranking (preserves sample_role and pair metadata)
+python scripts/rank_matched_scan.py \
+  --injection-table results/tables/injection_recovery.csv \
+  --candidate-table results/tables/detector_candidate_events_matched_scan.csv \
+  --output-ranked results/tables/ranked_candidate_events_matched_scan.csv \
+  --output-eval results/tables/ml_evaluation_summary_matched_scan.csv
+
+# Step 3: Automated vetting
+python scripts/run_vetting.py \
+  --candidate-table results/tables/ranked_candidate_events_matched_scan.csv \
+  --output-vetted results/tables/vetted_candidate_events_matched_scan.csv \
+  --output-manual results/tables/manual_vetting_sheet_matched_scan.csv
+
+# Step 4: Rate statistics (auto-detects .meta.json for accurate exposure)
+python scripts/run_stats.py \
+  --vetted-candidates results/tables/vetted_candidate_events_matched_scan.csv \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --output results/tables/rate_ratio_summary_matched_scan.csv \
+  --n-bootstrap 1000 \
+  --random-seed 42
+```
+
+Phase 5B outputs: `results/tables/detector_candidate_events_matched_scan.csv`,
+`results/tables/detector_candidate_events_matched_scan.meta.json`,
+`results/tables/ranked_candidate_events_matched_scan.csv`,
+`results/tables/vetted_candidate_events_matched_scan.csv`,
+`results/tables/rate_ratio_summary_matched_scan.csv`,
+and five diagnostic figures.
+
+See [docs/PHASE5B_MATCHED_SCAN.md](docs/PHASE5B_MATCHED_SCAN.md) for full documentation.
+
+## Phase 5C: External Catalog Crossmatch Vetting
+
+Phase 5C queries VSX, SIMBAD, and the TESS Eclipsing Binary catalog for each
+candidate host star to identify known variable stars, eclipsing binaries, and
+astrophysically problematic object types.
+
+**External catalog checks reduce false positives — they do NOT confirm exocomet detections.**
+**Lack of a catalog match does NOT prove astrophysical validity.**
+**All candidates require manual review regardless of external catalog results.**
+
+Dev-run results (5 matched-scan candidates):
+- VSX: 1 match — TIC 115598451 (control) matched to NSV 15119, a new suspected
+  variable. Flagged as `known_variable_match`. This is a cautionary demotion,
+  not a definitive false-positive verdict.
+- SIMBAD: 5 matches — all four target candidates returned PM\* or generic star
+  types (not in contamination concern list). TIC 115598451 returned `**` (double
+  star), also not a direct concern.
+- TESS-EB: 0 matches for any candidate in the current dev run.
+- All results are preliminary. Failed queries must be re-run with network access.
+
+### Run external catalog vetting
+
+```bash
+python scripts/run_external_vetting.py \
+  --candidate-table results/tables/vetted_candidate_events_matched_scan.csv \
+  --output results/tables/vetted_candidate_events_external_checked.csv \
+  --summary-output results/tables/external_crossmatch_summary.csv \
+  --radius-arcsec 10
+```
+
+Phase 5C outputs: `results/tables/vetted_candidate_events_external_checked.csv`,
+`results/tables/external_crossmatch_summary.csv`,
+`results/figures/external_catalog_flag_counts.png`.
+
+See [docs/PHASE5C_EXTERNAL_VETTING.md](docs/PHASE5C_EXTERNAL_VETTING.md) for
+full documentation including status values, flag labels, and interpretation guide.
+
 ## Repository Structure
 
 ```text
@@ -334,6 +427,9 @@ scripts/
   train_event_ranker.py       Phase 4 ML ranker training and candidate scoring
   run_vetting.py              Phase 5 automated vetting CLI
   run_stats.py                Phase 5 rate statistics CLI
+  run_matched_scan.py         Phase 5B matched target+control scan CLI
+  rank_matched_scan.py        Phase 5B ML ranking for matched-scan candidates
+  run_external_vetting.py     Phase 5C external catalog crossmatch vetting
   build_catalogs.py
   build_control_pool_from_user_csv.py
   verify_catalogs.py
@@ -346,6 +442,8 @@ docs/
   PHASE3_INJECTION_RECOVERY.md
   PHASE4_ML_RANKER.md
   PHASE5_VETTING_STATISTICS.md
+  PHASE5B_MATCHED_SCAN.md
+  PHASE5C_EXTERNAL_VETTING.md
 cache/lightcurves/   Parquet cache (git-ignored)
 results/figures/
 results/tables/
@@ -354,4 +452,6 @@ tests/
 
 ## Next Phases
 
-- Phase 6: full survey scan (all matched-pair targets + controls), manual vetting, and paper draft.
+- Phase 6: full-network matched scan (all 28 target + 28 control stars), complete
+  manual vetting cascade, additional external catalog checks (Gaia variability,
+  ASAS-SN, ZTF), and paper draft.

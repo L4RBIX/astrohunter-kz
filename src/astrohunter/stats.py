@@ -182,11 +182,18 @@ def compute_rate_ratio(
 def compute_candidate_yield_by_role(
     candidate_df: pd.DataFrame,
     matched_pairs_df: pd.DataFrame,
+    scan_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Count candidates by target/control role using matched-pairs membership.
 
-    Matches candidate tic_ids against target_tic_id and control_tic_id lists
-    from matched_pairs.csv.  Candidates not in either list are labelled "unknown".
+    If *candidate_df* has a ``sample_role`` column (from the matched scan),
+    that is used directly for role assignment.  Otherwise, tic_ids are matched
+    against matched_pairs.csv lists.
+
+    Exposure is the number of unique stars *actually scanned*, taken from
+    *scan_meta* when available (``n_target_success``, ``n_control_success``).
+    Falls back to the total matched-pairs catalog count with a warning when
+    scan metadata is absent.
 
     Parameters
     ----------
@@ -194,14 +201,19 @@ def compute_candidate_yield_by_role(
         Vetted candidate event DataFrame.
     matched_pairs_df:
         matched_pairs.csv DataFrame.
+    scan_meta:
+        Optional dict from the scanner's .meta.json file.  When provided,
+        ``target_tics_scanned`` and ``control_tics_scanned`` are used for
+        exposure instead of the full catalog count.
 
     Returns
     -------
     dict
         Keys: target_candidates, control_candidates, unknown_candidates,
-        target_exposure, control_exposure, candidate_tic_ids_target,
-        candidate_tic_ids_control.
+        target_exposure, control_exposure, exposure_source,
+        candidate_tic_ids_target, candidate_tic_ids_control.
     """
+    # --- Determine target/control TIC sets from matched pairs ---
     if matched_pairs_df is None or matched_pairs_df.empty:
         logger.warning("matched_pairs_df is empty; cannot assign candidate roles.")
         n = len(candidate_df)
@@ -211,6 +223,7 @@ def compute_candidate_yield_by_role(
             "unknown_candidates": 0,
             "target_exposure": 1.0,
             "control_exposure": 1.0,
+            "exposure_source": "fallback_1",
             "candidate_tic_ids_target": [],
             "candidate_tic_ids_control": [],
         }
@@ -218,8 +231,28 @@ def compute_candidate_yield_by_role(
     target_tics = set(matched_pairs_df["target_tic_id"].dropna().astype(int))
     control_tics = set(matched_pairs_df["control_tic_id"].dropna().astype(int))
 
-    if "tic_id" not in candidate_df.columns:
-        logger.warning("'tic_id' column absent from candidate table.")
+    # --- Role assignment: prefer sample_role column, fall back to TIC lookup ---
+    if "sample_role" in candidate_df.columns and candidate_df["sample_role"].notna().any():
+        target_mask = candidate_df["sample_role"] == "target"
+        control_mask = candidate_df["sample_role"] == "control"
+        unknown_mask = ~target_mask & ~control_mask
+
+        in_target_tics = (
+            pd.to_numeric(candidate_df.loc[target_mask, "tic_id"], errors="coerce")
+            .dropna().astype(int)
+            if "tic_id" in candidate_df.columns else pd.Series(dtype=int)
+        )
+        in_control_tics = (
+            pd.to_numeric(candidate_df.loc[control_mask, "tic_id"], errors="coerce")
+            .dropna().astype(int)
+            if "tic_id" in candidate_df.columns else pd.Series(dtype=int)
+        )
+        n_target = int(target_mask.sum())
+        n_control = int(control_mask.sum())
+        n_unknown = int(unknown_mask.sum())
+        logger.debug("Role assignment from sample_role column.")
+    elif "tic_id" not in candidate_df.columns:
+        logger.warning("'tic_id' and 'sample_role' both absent; cannot assign roles.")
         n = len(candidate_df)
         return {
             "target_candidates": n,
@@ -227,27 +260,48 @@ def compute_candidate_yield_by_role(
             "unknown_candidates": 0,
             "target_exposure": float(len(target_tics) or 1),
             "control_exposure": float(len(control_tics) or 1),
+            "exposure_source": "matched_pairs_total",
             "candidate_tic_ids_target": [],
             "candidate_tic_ids_control": [],
         }
+    else:
+        tic_ids = pd.to_numeric(candidate_df["tic_id"], errors="coerce").dropna().astype(int)
+        in_target_tics = tic_ids[tic_ids.isin(target_tics)]
+        in_control_tics = tic_ids[tic_ids.isin(control_tics)]
+        n_target = int(len(in_target_tics))
+        n_control = int(len(in_control_tics))
+        n_unknown = int((~tic_ids.isin(target_tics | control_tics)).sum())
+        logger.debug("Role assignment from tic_id membership in matched_pairs.")
 
-    tic_ids = pd.to_numeric(candidate_df["tic_id"], errors="coerce").dropna().astype(int)
-
-    in_target = tic_ids[tic_ids.isin(target_tics)]
-    in_control = tic_ids[tic_ids.isin(control_tics)]
-    n_unknown = int((~tic_ids.isin(target_tics | control_tics)).sum())
-
-    target_exposure = _estimate_exposure_from_pairs(matched_pairs_df, "target")
-    control_exposure = _estimate_exposure_from_pairs(matched_pairs_df, "control")
+    # --- Exposure estimation ---
+    if scan_meta is not None:
+        t_exp = float(max(1, len(scan_meta.get("target_tics_scanned", []))))
+        c_exp = float(max(1, len(scan_meta.get("control_tics_scanned", []))))
+        exposure_source = "scan_meta_actual"
+        logger.info(
+            "Exposure from scan metadata: %d target stars scanned, %d control stars scanned.",
+            int(t_exp), int(c_exp),
+        )
+    else:
+        t_exp = _estimate_exposure_from_pairs(matched_pairs_df, "target")
+        c_exp = _estimate_exposure_from_pairs(matched_pairs_df, "control")
+        exposure_source = "matched_pairs_total"
+        logger.warning(
+            "No scan metadata provided; using matched-pairs total star count "
+            "(%d targets, %d controls) as exposure proxy. "
+            "This overestimates coverage if not all stars were scanned.",
+            int(t_exp), int(c_exp),
+        )
 
     return {
-        "target_candidates": int(len(in_target)),
-        "control_candidates": int(len(in_control)),
+        "target_candidates": n_target,
+        "control_candidates": n_control,
         "unknown_candidates": n_unknown,
-        "target_exposure": target_exposure,
-        "control_exposure": control_exposure,
-        "candidate_tic_ids_target": in_target.tolist(),
-        "candidate_tic_ids_control": in_control.tolist(),
+        "target_exposure": t_exp,
+        "control_exposure": c_exp,
+        "exposure_source": exposure_source,
+        "candidate_tic_ids_target": in_target_tics.tolist(),
+        "candidate_tic_ids_control": in_control_tics.tolist(),
     }
 
 
@@ -261,6 +315,7 @@ def bootstrap_rate_ratio(
     n_bootstrap: int = 1000,
     random_state: int = 42,
     confidence: float = 0.95,
+    scan_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Bootstrap confidence interval for the target/control rate ratio.
 
@@ -302,8 +357,8 @@ def bootstrap_rate_ratio(
             "stability_warning": "No candidates — bootstrap not possible.",
         }
 
-    # Determine exposures from the full catalog (fixed across replicates)
-    yields = compute_candidate_yield_by_role(candidate_df, matched_pairs_df)
+    # Determine exposures (fixed across replicates)
+    yields = compute_candidate_yield_by_role(candidate_df, matched_pairs_df, scan_meta=scan_meta)
     t_exp = yields["target_exposure"]
     c_exp = yields["control_exposure"]
 
@@ -318,18 +373,29 @@ def bootstrap_rate_ratio(
         else set()
     )
 
-    tic_array = (
-        pd.to_numeric(candidate_df["tic_id"], errors="coerce").fillna(-1).astype(int).values
-        if "tic_id" in candidate_df.columns
-        else np.full(n, -1, dtype=int)
-    )
+    # If sample_role column exists, use it; else fall back to TIC lookup
+    if "sample_role" in candidate_df.columns:
+        role_array = candidate_df["sample_role"].fillna("unknown").to_numpy()
+        tic_array = None
+    else:
+        role_array = None
+        tic_array = (
+            pd.to_numeric(candidate_df["tic_id"], errors="coerce").fillna(-1).astype(int).values
+            if "tic_id" in candidate_df.columns
+            else np.full(n, -1, dtype=int)
+        )
 
     ratios: list[float] = []
     for _ in range(n_bootstrap):
         boot_idx = rng.integers(0, n, size=n)
-        boot_tics = tic_array[boot_idx]
-        t_count = int(np.isin(boot_tics, list(target_tics)).sum())
-        c_count = int(np.isin(boot_tics, list(control_tics)).sum())
+        if role_array is not None:
+            boot_roles = role_array[boot_idx]
+            t_count = int((boot_roles == "target").sum())
+            c_count = int((boot_roles == "control").sum())
+        else:
+            boot_tics = tic_array[boot_idx]
+            t_count = int(np.isin(boot_tics, list(target_tics)).sum())
+            c_count = int(np.isin(boot_tics, list(control_tics)).sum())
         t_rate = t_count / max(t_exp, 1e-9)
         c_rate = c_count / max(c_exp, 1e-9)
         if c_rate > 0:
@@ -443,6 +509,7 @@ def summarize_rate_statistics(
     random_state: int = 42,
     vetting_status_col: str = "automated_vetting_status",
     pass_value: str = "pass",
+    scan_meta: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Produce the full rate-ratio summary table.
 
@@ -463,6 +530,10 @@ def summarize_rate_statistics(
         Column name for automated vetting status.
     pass_value:
         Value indicating a passing candidate.
+    scan_meta:
+        Optional scan metadata dict from run_matched_scan.py
+        (loaded from .meta.json).  When present, actual scanned star counts
+        are used for exposure instead of total matched-pairs catalog size.
 
     Returns
     -------
@@ -472,9 +543,7 @@ def summarize_rate_statistics(
     """
     rows: list[dict[str, Any]] = []
 
-    subsets = {
-        "all_candidates": candidate_df,
-    }
+    subsets: dict[str, pd.DataFrame] = {"all_candidates": candidate_df}
     if vetting_status_col in candidate_df.columns:
         post_vet = candidate_df[candidate_df[vetting_status_col] == pass_value]
         subsets["post_vetting_pass"] = post_vet
@@ -487,7 +556,7 @@ def summarize_rate_statistics(
                 subset_label, total,
             )
 
-        yields = compute_candidate_yield_by_role(df_sub, matched_pairs_df)
+        yields = compute_candidate_yield_by_role(df_sub, matched_pairs_df, scan_meta=scan_meta)
         t_count = yields["target_candidates"]
         c_count = yields["control_candidates"]
         t_exp = yields["target_exposure"]
@@ -499,12 +568,14 @@ def summarize_rate_statistics(
             df_sub, matched_pairs_df,
             n_bootstrap=n_bootstrap,
             random_state=random_state,
+            scan_meta=scan_meta,
         )
 
         row: dict[str, Any] = {
             "subset": subset_label,
             "total_candidates": total,
             "unknown_role_candidates": yields["unknown_candidates"],
+            "exposure_source": yields.get("exposure_source", "unknown"),
             "stats_version": STATS_VERSION,
         }
         row.update(rate_dict)

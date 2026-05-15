@@ -211,3 +211,99 @@ Automated vetting applies heuristic flags only.  It does NOT confirm
 exocomet detections.  External catalog crossmatches (EB/VSX/SIMBAD) are
 not implemented.  Dev-sample rate statistics are preliminary and unstable
 with N < 10 candidates.  See `docs/PHASE5_VETTING_STATISTICS.md`.
+
+## Phase 5B: Matched Target/Control Scan
+
+Run the asymmetric-dip detector across all matched target and control stars,
+then rerun ML ranking, automated vetting, and rate statistics on the combined
+candidate table.
+
+```bash
+# Step 1: Scan all matched pairs (uses cached light curves; warns on failures)
+python scripts/run_matched_scan.py \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --target-catalog catalogs/target_sample_enriched.csv \
+  --control-pool catalogs/control_pool.csv \
+  --output results/tables/detector_candidate_events_matched_scan.csv \
+  --max-pairs 28 \
+  --max-lightcurves-per-star 1 \
+  --sigma-threshold 4.0
+
+# Step 2: ML ranking (preserves sample_role column)
+python scripts/rank_matched_scan.py \
+  --injection-table results/tables/injection_recovery.csv \
+  --candidate-table results/tables/detector_candidate_events_matched_scan.csv \
+  --output-ranked results/tables/ranked_candidate_events_matched_scan.csv \
+  --output-eval results/tables/ml_evaluation_summary_matched_scan.csv
+
+# Step 3: Automated vetting
+python scripts/run_vetting.py \
+  --candidate-table results/tables/ranked_candidate_events_matched_scan.csv \
+  --output-vetted results/tables/vetted_candidate_events_matched_scan.csv \
+  --output-manual results/tables/manual_vetting_sheet_matched_scan.csv
+
+# Step 4: Rate statistics (auto-detects .meta.json for accurate exposure)
+python scripts/run_stats.py \
+  --vetted-candidates results/tables/vetted_candidate_events_matched_scan.csv \
+  --matched-pairs catalogs/matched_pairs.csv \
+  --output results/tables/rate_ratio_summary_matched_scan.csv \
+  --n-bootstrap 1000 \
+  --random-seed 42
+```
+
+Expected Phase 5B outputs:
+
+- `results/tables/detector_candidate_events_matched_scan.csv`
+- `results/tables/detector_candidate_events_matched_scan.meta.json`
+- `results/tables/ranked_candidate_events_matched_scan.csv`
+- `results/tables/ml_evaluation_summary_matched_scan.csv`
+- `results/tables/vetted_candidate_events_matched_scan.csv`
+- `results/tables/manual_vetting_sheet_matched_scan.csv`
+- `results/tables/rate_ratio_summary_matched_scan.csv`
+- `results/figures/matched_scan_candidate_score_distribution.png`
+- `results/figures/rate_ratio_matched_scan_plot.png`
+- `results/figures/target_control_counts_matched_scan.png`
+
+Phase 5B rate statistics are PRELIMINARY.  Coverage is limited to stars with
+cached TESS light curves.  A rate ratio near 1 with a wide Poisson CI indicates
+insufficient data, not equivalence.  All candidates require manual vetting and
+external catalog crossmatches before any astrophysical interpretation.
+See `docs/PHASE5B_MATCHED_SCAN.md` for full documentation.
+
+## Phase 5C: External Catalog Crossmatch Vetting
+
+Query VSX, SIMBAD, and the TESS Eclipsing Binary catalog for each candidate
+host star to identify known false-positive or variable-star sources.  Requires
+network access to VizieR and SIMBAD.  Failed queries are logged transparently
+as `status = failed`; use `--skip-*` flags to run offline.
+
+```bash
+python scripts/run_external_vetting.py \
+  --candidate-table results/tables/vetted_candidate_events_matched_scan.csv \
+  --output results/tables/vetted_candidate_events_external_checked.csv \
+  --summary-output results/tables/external_crossmatch_summary.csv \
+  --radius-arcsec 10
+```
+
+Offline mode (skip all remote queries):
+
+```bash
+python scripts/run_external_vetting.py \
+  --candidate-table results/tables/vetted_candidate_events_matched_scan.csv \
+  --output results/tables/vetted_candidate_events_external_checked.csv \
+  --summary-output results/tables/external_crossmatch_summary.csv \
+  --skip-vsx --skip-simbad --skip-tess-eb
+```
+
+Expected Phase 5C outputs:
+
+- `results/tables/vetted_candidate_events_external_checked.csv`
+- `results/tables/external_crossmatch_summary.csv`
+- `results/figures/external_catalog_flag_counts.png`
+
+External catalog checks reduce false-positive contamination but do NOT confirm
+exocomet detections.  A catalog match indicates possible contamination, not
+definitive rejection.  Lack of a match does NOT prove astrophysical validity.
+Failed queries (`status = failed`) must be re-run with network access before
+interpreting "no match" as meaningful.  All candidates require manual review.
+See `docs/PHASE5C_EXTERNAL_VETTING.md` for full documentation.

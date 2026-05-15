@@ -67,3 +67,30 @@ Required wording for Phase 5 outputs:
 The `automated_vetting_status` column is a heuristic filter aid, not a
 astrophysical classification.  The rate ratio in `rate_ratio_summary.csv`
 is a technical readiness demonstration for Phase 6, not a discovery claim.
+
+## Phase 5C External-Catalog-Vetting-Specific Rules
+
+Additional forbidden wording for Phase 5C outputs:
+
+- "external catalog check confirms no false positive"
+- "SIMBAD shows this is a real exocomet candidate"
+- "no VSX match proves the event is astrophysical"
+- "the TESS-EB catalog cleared this candidate"
+- "external vetting confirms exocomet"
+
+Required wording for Phase 5C outputs:
+
+- "external catalog checks reduce false-positive contamination but do not
+  confirm exocomet detections"
+- "a catalog match indicates possible contamination, not definitive rejection"
+- "lack of a catalog match does not prove astrophysical validity"
+- "failed queries (status = failed) are inconclusive and must be re-run"
+- "manual inspection of every candidate is still required"
+- "one control candidate was flagged due to a VSX suspected-variable match;
+  this is a precautionary demotion, not a confirmed false positive"
+
+The `external_false_positive_flag` column is a heuristic classifier, not a
+scientific verdict.  The `known_variable_match` flag on TIC 115598451 indicates
+a known suspected variable in the same sky position; it does not confirm that
+the candidate transit event is caused by the variable star, and it does not
+rule out a genuine comet event hosted by a different star in the field.

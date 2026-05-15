@@ -54,6 +54,72 @@ rate_ratio_summary.csv, and three diagnostic figures.
 
 See [docs/PHASE5_VETTING_STATISTICS.md](PHASE5_VETTING_STATISTICS.md) for full documentation.
 
+## Phase 5B: Matched Target/Control Scan (complete)
+
+Run the Phase 3 detector across all 28 matched target stars and 28 matched
+control stars simultaneously.  Rerun ML ranking, automated vetting, and rate
+statistics on the combined candidate table to produce honest target/control
+candidate-yield statistics.
+
+Constraints:
+- Matched scan is still preliminary — limited to stars with cached TESS data.
+- Candidates are NOT confirmed exocomets.
+- Automated vetting is NOT scientific confirmation.
+- Rate statistics are only as good as scan coverage: with < 10 candidates or
+  < 5 stars per group scanned, rate ratios and bootstrap CIs are unstable.
+- External catalog crossmatches (EB, VSX, SIMBAD) are NOT implemented.
+- Full paper still requires manual vetting and external catalog checks.
+- A rate ratio > 1 is NOT evidence for an exocomet excess without the above.
+
+Key additions:
+- `sample_role` column ('target'/'control') attached at scan time.
+- Scan metadata JSON (`*.meta.json`) stores actual scanned TIC counts for
+  accurate Poisson exposure estimation (`exposure_source = "scan_meta_actual"`).
+- Zero-control-candidate handling and bootstrap NaN propagation are safe.
+
+Outputs: detector_candidate_events_matched_scan.csv + .meta.json,
+ranked_candidate_events_matched_scan.csv, vetted_candidate_events_matched_scan.csv,
+rate_ratio_summary_matched_scan.csv, and five diagnostic figures.
+
+See [docs/PHASE5B_MATCHED_SCAN.md](PHASE5B_MATCHED_SCAN.md) for full documentation.
+
+## Phase 5C: External Catalog Crossmatch Vetting (complete)
+
+Query VSX, SIMBAD, and the TESS Eclipsing Binary catalog for each candidate
+host star to identify known false-positive contamination sources and integrate
+the findings into the automated vetting status.
+
+Constraints:
+- External catalog checks are NOT scientific confirmation of exocomet absence
+  or presence.
+- A catalog match (VSX, SIMBAD, TESS-EB) indicates possible contamination only.
+- Lack of a catalog match does NOT prove astrophysical validity.
+- Failed or not-attempted queries must be reported transparently.
+- Manual inspection remains mandatory for every candidate.
+
+Dev-run results (5 matched-scan candidates, radius = 10″):
+- VSX: 1 match — TIC 115598451 (control) matched to NSV 15119 (new suspected
+  variable). Flagged `known_variable_match`. Automated vetting status demoted to
+  `flagged`. This is a precautionary flag, not a definitive rejection.
+- SIMBAD: 5 matches — four target candidates typed PM\* or generic star (no
+  contamination concern); TIC 115598451 typed `**` (double star, not a concern).
+- TESS-EB: 0 matches for any candidate in the current dev run.
+- All results are preliminary; full-survey scanning required for interpretation.
+
+Key additions:
+- `external_false_positive_flag` column classifies the combined catalog result.
+- `flag_external_catalog_match = True` for candidates with concern-level flags.
+- External concern flags demote `automated_vetting_status` from `pass` →
+  `flagged`; never promote `flagged` → `pass`.
+- SIMBAD column names are handled robustly across astroquery versions
+  (0.4.11 TAP: lowercase `main_id`, `otype`; older: uppercase).
+
+Outputs: vetted_candidate_events_external_checked.csv,
+external_crossmatch_summary.csv, external_catalog_flag_counts.png.
+
+See [docs/PHASE5C_EXTERNAL_VETTING.md](PHASE5C_EXTERNAL_VETTING.md) for full
+documentation.
+
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 
 Prepare a transparent methods/results draft, archive reproducible tables, audit

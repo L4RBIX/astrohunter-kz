@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Phase 5 candidate-yield rate statistics CLI for AstroHunter KZ.
+"""Phase 5 / 5B candidate-yield rate statistics CLI for AstroHunter KZ.
 
 Loads the vetted candidate table and matched-pairs catalog, computes
 preliminary target/control candidate-yield rate statistics, saves a
 summary table, and generates diagnostic figures.
 
-IMPORTANT: Dev-sample statistics are preliminary.
+When a scan metadata file (.meta.json) exists alongside the vetted
+candidate table, it is loaded automatically and used for accurate
+exposure estimation (actual scanned star count rather than total
+matched-pairs catalog size).
+
+IMPORTANT: Statistics are preliminary.
 With < 10 total candidates, rate ratios are unstable.
 These results do NOT constitute a scientific claim.
 Full survey data are required for interpretation.
@@ -14,6 +19,7 @@ Full survey data are required for interpretation.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 from pathlib import Path
@@ -76,6 +82,16 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=int,
         default=42,
         help="Random seed for reproducibility.",
+    )
+    p.add_argument(
+        "--scan-meta",
+        default=None,
+        help=(
+            "Optional path to scan metadata JSON file "
+            "(e.g. detector_candidate_events_matched_scan.meta.json). "
+            "When provided, actual scanned star counts are used for exposure. "
+            "Auto-detected if the vetted table path shares a stem with a .meta.json."
+        ),
     )
     return p.parse_args(argv)
 
@@ -166,15 +182,57 @@ def main(argv: list[str] | None = None) -> int:
         matched_pairs_df = pd.DataFrame()
         print(f"WARNING: matched_pairs not found at {pairs_path}. Exposure proxy = 1 star each.")
 
+    # ---- Load scan metadata for accurate exposure estimation ----
+    scan_meta: dict | None = None
+    meta_candidates: list[Path] = []
+    if args.scan_meta:
+        meta_candidates.append(Path(args.scan_meta))
+    # Auto-detect: look for a .meta.json with the same stem as the candidate table
+    # (e.g. vetted_candidate_events_matched_scan → detector_candidate_events_matched_scan.meta.json)
+    stem = vet_path.stem.replace("vetted_candidate_events", "detector_candidate_events")
+    auto_meta = vet_path.parent / f"{stem}.meta.json"
+    if auto_meta.exists():
+        meta_candidates.append(auto_meta)
+
+    for mp in meta_candidates:
+        if mp.exists():
+            try:
+                with open(mp) as fh:
+                    scan_meta = json.load(fh)
+                logger.info(
+                    "Loaded scan metadata from %s "
+                    "(target scanned=%d, control scanned=%d).",
+                    mp,
+                    scan_meta.get("n_target_success", "?"),
+                    scan_meta.get("n_control_success", "?"),
+                )
+                print(
+                    f"Loaded scan metadata: {mp}\n"
+                    f"  Target  stars actually scanned: {scan_meta.get('n_target_success', '?')}\n"
+                    f"  Control stars actually scanned: {scan_meta.get('n_control_success', '?')}"
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not load scan metadata %s: %s", mp, exc)
+            break
+
+    if scan_meta is None:
+        logger.warning(
+            "No scan metadata found. Exposure will be estimated from matched-pairs "
+            "catalog total (may overestimate if not all stars were scanned)."
+        )
+        print("WARNING: No scan metadata found — using matched-pairs catalog size for exposure.")
+
     # ----------------------------------------------------------- role counts
-    yields = compute_candidate_yield_by_role(candidate_df, matched_pairs_df)
+    yields = compute_candidate_yield_by_role(candidate_df, matched_pairs_df, scan_meta=scan_meta)
     print(
-        f"\nRole assignment from matched-pairs catalog:"
+        f"\nRole assignment:"
         f"\n  Target  candidates: {yields['target_candidates']}"
         f"\n  Control candidates: {yields['control_candidates']}"
         f"\n  Unknown-role:       {yields['unknown_candidates']}"
-        f"\n  Target  exposure:   {yields['target_exposure']:.0f} unique target stars"
-        f"\n  Control exposure:   {yields['control_exposure']:.0f} unique control stars"
+        f"\n  Target  exposure:   {yields['target_exposure']:.0f} stars"
+        f"  (source: {yields.get('exposure_source', '?')})"
+        f"\n  Control exposure:   {yields['control_exposure']:.0f} stars"
+        f"  (source: {yields.get('exposure_source', '?')})"
     )
 
     if n_candidates < MIN_CANDIDATES_FOR_STABLE_STATS:
@@ -190,6 +248,7 @@ def main(argv: list[str] | None = None) -> int:
         matched_pairs_df,
         n_bootstrap=args.n_bootstrap,
         random_state=args.random_seed,
+        scan_meta=scan_meta,
     )
 
     print("\n--- Rate-Ratio Summary ---")
@@ -205,26 +264,46 @@ def main(argv: list[str] | None = None) -> int:
     # ------------------------------------------------------------- figures
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
-    rr_fig = FIGURES_DIR / "rate_ratio_plot.png"
+    # Derive a figure prefix from the output table name so matched-scan
+    # figures don't overwrite the dev-scan figures.
+    out_stem = Path(args.output).stem  # e.g. "rate_ratio_summary_matched_scan"
+    fig_prefix = out_stem.replace("rate_ratio_summary", "").strip("_") or "dev"
+
+    rr_fig = FIGURES_DIR / f"{'matched_scan_' if fig_prefix else ''}rate_ratio_plot.png"
+    # Simpler: always derive from the output path stem
+    rr_fig = FIGURES_DIR / f"{out_stem.replace('_summary', '')}_plot.png"
     try:
         plot_rate_ratio_summary(summary_df, output_path=rr_fig)
         print(f"Saved figure: {rr_fig}")
     except Exception as exc:  # noqa: BLE001
         logger.warning("Rate-ratio plot failed: %s", exc)
 
-    snr_fig = FIGURES_DIR / "candidate_score_vs_snr.png"
+    snr_stem = out_stem.replace("rate_ratio_summary", "candidate_score_vs_snr")
+    snr_fig = FIGURES_DIR / f"{snr_stem}.png"
     try:
         plot_candidate_score_vs_snr(candidate_df, output_path=snr_fig)
         print(f"Saved figure: {snr_fig}")
     except Exception as exc:  # noqa: BLE001
         logger.warning("Score-vs-SNR plot failed: %s", exc)
 
-    flag_fig = FIGURES_DIR / "vetting_flag_counts.png"
+    flag_stem = out_stem.replace("rate_ratio_summary", "vetting_flag_counts")
+    flag_fig = FIGURES_DIR / f"{flag_stem}.png"
     try:
         plot_vetting_flag_counts(candidate_df, output_path=flag_fig)
         print(f"Saved figure: {flag_fig}")
     except Exception as exc:  # noqa: BLE001
         logger.warning("Vetting flag counts plot failed: %s", exc)
+
+    # Plot target/control candidate counts if sample_role column exists
+    if "sample_role" in candidate_df.columns:
+        from astrohunter.plotting import plot_target_control_candidate_counts
+        tc_stem = out_stem.replace("rate_ratio_summary", "target_control_counts")
+        tc_fig = FIGURES_DIR / f"{tc_stem}.png"
+        try:
+            plot_target_control_candidate_counts(candidate_df, summary_df, output_path=tc_fig)
+            print(f"Saved figure: {tc_fig}")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Target/control counts plot failed: %s", exc)
 
     print()
     print("REMINDER: Rate statistics on the dev sample are preliminary.")

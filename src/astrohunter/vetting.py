@@ -4,12 +4,14 @@ Automated vetting applies transparent, reproducible flag criteria to candidate
 event tables.  It does NOT confirm or reject any astrophysical interpretation.
 Every flagged candidate still requires manual review before any scientific claim.
 
-External catalog crossmatches (EB catalogs, VSX, SIMBAD) are NOT performed by
-this module.  Placeholder status columns are added to track their absence.
+Phase 5C adds integration of external catalog false-positive flags (VSX, SIMBAD,
+TESS-EB) via apply_external_flags_to_vetting().  External flags can demote a
+candidate from 'pass' to 'flagged' but never promote 'flagged' to 'pass'.
 
 SCIENTIFIC CONSTRAINTS:
 - Automated flags are heuristic filters, not confirmation tests.
 - Passing automated vetting does NOT confirm an exocomet detection.
+- External catalog flags indicate possible contamination, not definitive rejection.
 - All candidates require multi-sector validation and follow-up.
 - Rate statistics derived from this output are preliminary.
 """
@@ -36,12 +38,29 @@ AUTOMATED_FLAG_COLUMNS: list[str] = [
     "flag_poor_asymmetry_fit",
 ]
 
-# Placeholder external-crossmatch status columns
+# Placeholder external-crossmatch status columns (Phase 5 stubs)
 EXTERNAL_CHECK_COLUMNS: list[str] = [
     "eb_catalog_check_status",
     "vsx_check_status",
     "simbad_check_status",
 ]
+
+# Phase 5C full external-check columns (populated by external_vetting module)
+EXTERNAL_FULL_COLUMNS: list[str] = [
+    "vsx_check_status", "vsx_match_name", "vsx_variable_type", "vsx_sep_arcsec",
+    "simbad_check_status", "simbad_main_id", "simbad_otype", "simbad_otypes",
+    "simbad_sep_arcsec",
+    "tess_eb_check_status", "tess_eb_match_id", "tess_eb_sep_arcsec",
+    "external_false_positive_flag", "external_vetting_notes",
+    "flag_external_catalog_match",
+]
+
+# External FP label values that demote a candidate to 'flagged'
+_EXTERNAL_DEMOTE_FLAGS: frozenset[str] = frozenset({
+    "possible_eclipsing_binary_match",
+    "known_variable_match",
+    "simbad_nonstellar_or_problematic_type",
+})
 
 # Manual review columns added for human annotators
 MANUAL_REVIEW_COLUMNS: list[str] = [
@@ -292,6 +311,68 @@ def add_manual_review_columns(candidate_df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Phase 5C: integrate external false-positive flags
+# ---------------------------------------------------------------------------
+
+def apply_external_flags_to_vetting(candidate_df: pd.DataFrame) -> pd.DataFrame:
+    """Integrate external catalog false-positive flags into automated_vetting_status.
+
+    If a candidate has an ``external_false_positive_flag`` that indicates a
+    likely contamination source (EB, known variable, SIMBAD problematic type),
+    its ``automated_vetting_status`` is demoted to 'flagged' and
+    ``flag_external_catalog_match`` is set to True.
+
+    Rules:
+    - 'pass' → 'flagged'  when external FP flag is a concern label.
+    - 'flagged' stays 'flagged' regardless.
+    - 'pass' stays 'pass'  when FP flag is 'no_external_match' or
+      'external_check_failed'.
+    - Existing automated flag columns are NEVER modified.
+    - Manual review columns are NEVER modified.
+
+    Parameters
+    ----------
+    candidate_df:
+        Candidate table after external_check_candidate_table().
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy with updated automated_vetting_status and flag_external_catalog_match.
+    """
+    result = candidate_df.copy()
+
+    # Ensure the new flag column exists
+    if "flag_external_catalog_match" not in result.columns:
+        result["flag_external_catalog_match"] = False
+
+    fp_col = "external_false_positive_flag"
+    status_col = "automated_vetting_status"
+
+    if fp_col not in result.columns:
+        logger.debug("No external_false_positive_flag column; nothing to integrate.")
+        return result
+
+    concern_mask = result[fp_col].isin(_EXTERNAL_DEMOTE_FLAGS)
+    result.loc[concern_mask, "flag_external_catalog_match"] = True
+
+    if status_col in result.columns:
+        # Demote 'pass' → 'flagged' where external concern; never promote
+        was_pass = result[status_col] == "pass"
+        result.loc[concern_mask & was_pass, status_col] = "flagged"
+    else:
+        result["automated_vetting_status"] = np.where(concern_mask, "flagged", "pass")
+
+    n_demoted = int(concern_mask.sum())
+    logger.info(
+        "External flag integration: %d candidate(s) newly flagged by external catalog match.",
+        n_demoted,
+    )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Summary and sheet
 # ---------------------------------------------------------------------------
 
@@ -362,7 +443,14 @@ def create_manual_vetting_sheet(candidate_df: pd.DataFrame) -> pd.DataFrame:
         "automated_vetting_status", "needs_manual_review",
         "flag_low_snr", "flag_edge_event", "flag_single_point_like",
         "flag_likely_flare_shape", "flag_low_delta_chi2", "flag_poor_asymmetry_fit",
+        "flag_external_catalog_match",
+        # Phase 5 stubs
         "eb_catalog_check_status", "vsx_check_status", "simbad_check_status",
+        # Phase 5C full external columns
+        "tess_eb_check_status", "tess_eb_match_id", "tess_eb_sep_arcsec",
+        "vsx_match_name", "vsx_variable_type", "vsx_sep_arcsec",
+        "simbad_main_id", "simbad_otype", "simbad_otypes", "simbad_sep_arcsec",
+        "external_false_positive_flag", "external_vetting_notes",
         "manual_reviewer", "manual_review_date",
         "manual_review_notes", "manual_disposition",
     ]
