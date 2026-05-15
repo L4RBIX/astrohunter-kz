@@ -1,4 +1,4 @@
-"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1–5C)."""
+"""Matplotlib plotting helpers for AstroHunter KZ (Phase 1–5E)."""
 
 from __future__ import annotations
 
@@ -1058,6 +1058,187 @@ def plot_target_control_candidate_counts(
 
     fig.suptitle(title, fontsize=12)
     note = "PRELIMINARY — not a scientific claim. Full survey required."
+    fig.text(0.5, -0.04, note, ha="center", fontsize=8, color="darkred", style="italic")
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+# ---------------------------------------------------------------------------
+# Phase 5E: Candidate consolidation figures
+# ---------------------------------------------------------------------------
+
+def plot_candidates_per_star(
+    star_summary_df: pd.DataFrame,
+    output_path=None,
+    overtrigger_threshold: int = 5,
+    title: str = "Candidate Events per Star",
+) -> Path | None:
+    """Horizontal bar chart of event counts per TIC, coloured by sample_role.
+
+    Stars above overtrigger_threshold are highlighted in a darker hue.
+    Sorted by n_events descending (most events at top).
+    """
+    output_path = _prepare_output_path(output_path)
+    if star_summary_df.empty or "n_events" not in star_summary_df.columns:
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+        return _finish_figure(fig, output_path)
+
+    df = star_summary_df.sort_values("n_events", ascending=True).copy()
+    n_stars = len(df)
+    label_col = "target_name" if "target_name" in df.columns else "tic_id"
+    labels = df[label_col].astype(str).tolist()
+
+    role_color = {"target": "#2196F3", "control": "#FF9800", "unknown": "#9E9E9E"}
+    ot_color = {"target": "#0D47A1", "control": "#E65100", "unknown": "#616161"}
+
+    roles = df["sample_role"].tolist() if "sample_role" in df.columns else ["unknown"] * n_stars
+    colors = [
+        (ot_color if ev >= overtrigger_threshold else role_color).get(r, "#9E9E9E")
+        for r, ev in zip(roles, df["n_events"].tolist())
+    ]
+
+    fig_h = max(4, 0.35 * n_stars + 1.5)
+    fig, ax = plt.subplots(figsize=(9, fig_h))
+
+    y = np.arange(n_stars)
+    ax.barh(y, df["n_events"].tolist(), color=colors, edgecolor="white", height=0.7)
+    ax.axvline(overtrigger_threshold, color="red", linestyle="--", linewidth=1.2,
+               label=f"Overtrigger threshold ({overtrigger_threshold})")
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_xlabel("Number of candidate events")
+    ax.set_title(title, fontsize=11)
+    ax.grid(axis="x", alpha=0.25)
+
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(color=role_color["target"], label="Target"),
+        Patch(color=role_color["control"], label="Control"),
+        Patch(color=ot_color["target"], label="Target (overtriggered)"),
+        Patch(color=ot_color["control"], label="Control (overtriggered)"),
+    ]
+    ax.legend(handles=legend_elements, loc="lower right", fontsize=8)
+
+    note = "High event count may indicate variability/systematics — NOT multiple exocomets."
+    fig.text(0.5, -0.02, note, ha="center", fontsize=8, color="darkred", style="italic")
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+def plot_top_scores_by_star(
+    top_event_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Top Candidate Score per Star",
+) -> Path | None:
+    """Scatter plot of the highest final_candidate_score per TIC, coloured by role.
+
+    Each point is the top-scoring event for that TIC.  Priority label is
+    shown via marker shape when available.
+    """
+    output_path = _prepare_output_path(output_path)
+    score_col = "final_candidate_score"
+    if top_event_df.empty or score_col not in top_event_df.columns:
+        fig, ax = plt.subplots(figsize=(9, 4))
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+        return _finish_figure(fig, output_path)
+
+    df = top_event_df.sort_values(score_col, ascending=False).reset_index(drop=True).copy()
+    n = len(df)
+
+    role_color = {"target": "#2196F3", "control": "#FF9800", "unknown": "#9E9E9E"}
+    priority_marker = {
+        "high": "★",
+        "medium": "◆",
+        "low": "●",
+        "overtriggered_review": "▲",
+    }
+    priority_mpl = {
+        "high": "*",
+        "medium": "D",
+        "low": "o",
+        "overtriggered_review": "^",
+    }
+
+    fig, ax = plt.subplots(figsize=(max(9, 0.4 * n + 2), 5))
+
+    for i, row in df.iterrows():
+        role = str(row.get("sample_role", "unknown"))
+        color = role_color.get(role, "#9E9E9E")
+        priority = str(row.get("recommended_review_priority", "low"))
+        marker = priority_mpl.get(priority, "o")
+        score = float(row[score_col]) if not pd.isna(row[score_col]) else float("nan")
+        ax.scatter(i, score, color=color, marker=marker, s=80, zorder=3, edgecolors="white", linewidths=0.5)
+
+    ax.set_xticks(range(n))
+    label_col = "target_name" if "target_name" in df.columns else "tic_id"
+    ax.set_xticklabels(df[label_col].astype(str).tolist(), rotation=55, ha="right", fontsize=7)
+    ax.set_ylabel("Final candidate score")
+    ax.set_title(title, fontsize=11)
+    ax.set_ylim(0, 1.05)
+    ax.axhline(0.7, color="gray", linestyle=":", linewidth=0.8, alpha=0.6)
+    ax.grid(axis="y", alpha=0.2)
+
+    from matplotlib.patches import Patch
+    from matplotlib.lines import Line2D
+    role_leg = [
+        Patch(color="#2196F3", label="Target"),
+        Patch(color="#FF9800", label="Control"),
+    ]
+    prio_leg = [
+        Line2D([0], [0], marker="*", color="gray", markersize=9, linestyle="none", label="high"),
+        Line2D([0], [0], marker="D", color="gray", markersize=7, linestyle="none", label="medium"),
+        Line2D([0], [0], marker="o", color="gray", markersize=7, linestyle="none", label="low"),
+        Line2D([0], [0], marker="^", color="gray", markersize=7, linestyle="none", label="overtriggered"),
+    ]
+    ax.legend(handles=role_leg + prio_leg, loc="upper right", fontsize=8, ncol=2)
+
+    note = "Scores rank candidates for review — NOT confirmation probabilities."
+    fig.text(0.5, -0.05, note, ha="center", fontsize=8, color="gray", style="italic")
+    fig.tight_layout()
+    return _finish_figure(fig, output_path)
+
+
+def plot_pass_candidates_by_role(
+    candidate_df: pd.DataFrame,
+    output_path=None,
+    title: str = "Automated-Vetting Pass Candidates by Role",
+) -> Path | None:
+    """Grouped bar: total events and pass events by sample_role."""
+    output_path = _prepare_output_path(output_path)
+    if candidate_df.empty:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+        return _finish_figure(fig, output_path)
+
+    roles = ["target", "control"]
+    total = [int((candidate_df["sample_role"] == r).sum()) for r in roles]
+    pass_ct = [
+        int(((candidate_df["sample_role"] == r) & (candidate_df.get("automated_vetting_status", "") == "pass")).sum())
+        for r in roles
+    ]
+
+    x = np.arange(len(roles))
+    width = 0.35
+    fig, ax = plt.subplots(figsize=(6, 4))
+    bars_total = ax.bar(x - width / 2, total, width, label="All events", color=["#90CAF9", "#FFCC80"], edgecolor="white")
+    bars_pass = ax.bar(x + width / 2, pass_ct, width, label="Pass vetting", color=["#1565C0", "#E65100"], edgecolor="white")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(["Target", "Control"])
+    ax.set_ylabel("Number of candidate events")
+    ax.set_title(title, fontsize=11)
+    ax.legend(fontsize=9)
+    ax.grid(axis="y", alpha=0.25)
+
+    for bar, val in zip(bars_total, total):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
+                str(val), ha="center", va="bottom", fontsize=9)
+    for bar, val in zip(bars_pass, pass_ct):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
+                str(val), ha="center", va="bottom", fontsize=9)
+
+    note = "Pass = automated vetting only. All candidates require manual review."
     fig.text(0.5, -0.04, note, ha="center", fontsize=8, color="darkred", style="italic")
     fig.tight_layout()
     return _finish_figure(fig, output_path)

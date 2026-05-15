@@ -426,3 +426,35 @@ External catalog checks reduce false positives but do NOT confirm exocomet
 detections.  Rate statistics have no scientific meaning until full-survey
 coverage and manual vetting are complete.
 See `docs/PHASE5D_FULL_MATCHED_RUN.md` for full documentation.
+
+## Phase 5E: Candidate Consolidation and Manual Review Package
+
+Build star-level summaries, identify overtriggered stars, and produce a
+prioritised manual review table from the Phase 5D externally-checked candidates.
+
+```bash
+python scripts/consolidate_candidates.py \
+  --candidate-table results/tables/full_matched_external_checked_candidates.csv \
+  --scan-status results/tables/full_matched_scan_status.csv \
+  --output-star-summary results/tables/full_matched_star_level_summary.csv \
+  --output-top-events results/tables/full_matched_top_event_per_star.csv \
+  --output-review-priority results/tables/full_matched_manual_review_priority.csv \
+  --output-overtriggered results/tables/full_matched_overtriggered_stars.csv \
+  --max-events-per-star 3 \
+  --overtrigger-threshold 5
+```
+
+Expected Phase 5E outputs:
+
+- `results/tables/full_matched_star_level_summary.csv`
+- `results/tables/full_matched_top_event_per_star.csv`
+- `results/tables/full_matched_manual_review_priority.csv`
+- `results/tables/full_matched_overtriggered_stars.csv`
+- `results/figures/full_matched_candidates_per_star.png`
+- `results/figures/full_matched_top_scores_by_star.png`
+- `results/figures/full_matched_pass_candidates_by_role.png`
+
+Consolidation is NOT confirmation of exocomet detections.  Priority labels
+are heuristic — all candidates require manual inspection.  Pass candidates
+on overtriggered stars are particularly suspect.
+See `docs/PHASE5E_CANDIDATE_CONSOLIDATION.md` for full documentation.

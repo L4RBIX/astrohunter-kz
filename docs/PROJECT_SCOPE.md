@@ -157,6 +157,48 @@ Outputs: `{prefix}_detector_candidates.csv`, `{prefix}_scan_status.csv`,
 See [docs/PHASE5D_FULL_MATCHED_RUN.md](PHASE5D_FULL_MATCHED_RUN.md) for
 full documentation.
 
+## Phase 5E: Candidate Consolidation and Manual Review Package (complete)
+
+Convert the event-level Phase 5D output into star-level summaries, identify
+overtriggered stars, select top events per TIC, and build a prioritised manual
+review table.
+
+Constraints:
+- Consolidation is NOT confirmation of exocomet detections.
+- Repeated events on one TIC most likely reflect stellar variability,
+  systematics, or contamination — not multiple exocomet transits.
+- Stars flagged as overtriggered_review require special scrutiny before any
+  individual event is accepted as a candidate.
+- Priority labels (high/medium/low/overtriggered_review) are heuristic
+  classifiers, not scientific verdicts.
+- Pass candidates on overtriggered stars are particularly suspect.
+- All candidates require manual inspection regardless of priority.
+
+Key additions:
+- `summarize_candidates_by_star()`: one-row-per-TIC aggregation with
+  n_events, n_pass, max/median SNR, max score, external flag counts,
+  and recommended_review_priority.
+- `identify_overtriggered_stars()`: TICs with ≥ overtrigger_threshold events.
+- `select_top_event_per_star()`: single highest-scoring event per TIC
+  for quick inspection.
+- `build_manual_review_priority_table()`: top N events per TIC with priority.
+- Three diagnostic figures: candidates-per-star bar chart, score scatter,
+  pass-candidate grouped bar chart.
+
+Phase 5E run results (2026-05-16):
+- 156 events across 36 TICs (15 target, 21 control).
+- 13 overtriggered TICs (≥ 5 events); top: TIC 444335503 (control, 20 events).
+- 0 high, 2 medium, 21 low, 13 overtriggered_review priority TICs.
+- 3 pass-vetting candidates — all on TIC 444335503 (control, overtriggered).
+- No pass candidates on any target star in this survey run.
+
+Outputs: full_matched_star_level_summary.csv, full_matched_top_event_per_star.csv,
+full_matched_manual_review_priority.csv, full_matched_overtriggered_stars.csv,
+and three diagnostic figures.
+
+See [docs/PHASE5E_CANDIDATE_CONSOLIDATION.md](PHASE5E_CANDIDATE_CONSOLIDATION.md) for
+full documentation.
+
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 
 Prepare a transparent methods/results draft, archive reproducible tables, audit

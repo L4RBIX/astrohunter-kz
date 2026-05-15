@@ -467,6 +467,42 @@ See [docs/PHASE5D_FULL_MATCHED_RUN.md](docs/PHASE5D_FULL_MATCHED_RUN.md) for
 full documentation including resume logic, per-star status columns, and
 prerequisites.
 
+## Phase 5E: Candidate Consolidation and Manual Review Package
+
+Phase 5E converts the event-level candidate table into star-level summaries,
+selects the top event per TIC, identifies overtriggered stars, and produces a
+prioritised manual review table and diagnostic figures.
+
+**Consolidation is NOT confirmation of exocomet detections.**
+**Priority labels are heuristic — all candidates require manual inspection.**
+**Repeated events on one star most likely reflect variability or systematics.**
+
+### Run consolidation
+
+```bash
+python scripts/consolidate_candidates.py \
+  --candidate-table results/tables/full_matched_external_checked_candidates.csv \
+  --scan-status results/tables/full_matched_scan_status.csv \
+  --output-star-summary results/tables/full_matched_star_level_summary.csv \
+  --output-top-events results/tables/full_matched_top_event_per_star.csv \
+  --output-review-priority results/tables/full_matched_manual_review_priority.csv \
+  --output-overtriggered results/tables/full_matched_overtriggered_stars.csv \
+  --max-events-per-star 3 \
+  --overtrigger-threshold 5
+```
+
+Phase 5E outputs:
+`results/tables/full_matched_star_level_summary.csv` (36 TICs),
+`results/tables/full_matched_top_event_per_star.csv` (36 TICs),
+`results/tables/full_matched_manual_review_priority.csv` (80 events),
+`results/tables/full_matched_overtriggered_stars.csv` (13 TICs),
+`results/figures/full_matched_candidates_per_star.png`,
+`results/figures/full_matched_top_scores_by_star.png`,
+`results/figures/full_matched_pass_candidates_by_role.png`.
+
+See [docs/PHASE5E_CANDIDATE_CONSOLIDATION.md](docs/PHASE5E_CANDIDATE_CONSOLIDATION.md)
+for full documentation including priority rules, column definitions, and result interpretation.
+
 ## Repository Structure
 
 ```text
@@ -478,20 +514,22 @@ src/astrohunter/
   ml.py               Phase 4 ML ranker: training, evaluation, scoring
   vetting.py          Phase 5 automated vetting flags
   stats.py            Phase 5 candidate yield rate statistics
-  plotting.py         Matplotlib figure helpers (Phase 1–5)
+  consolidation.py    Phase 5E star-level summaries and review prioritisation
+  plotting.py         Matplotlib figure helpers (Phase 1–5E)
   catalogs.py         VizieR catalog loading and target-sample normalization
   crossmatch.py       Coordinate matching and control-sample building
 scripts/
   run_beta_pic_control.py
-  run_injection_recovery.py   Phase 3 injection-recovery CLI
-  run_scan.py                 Phase 3 real-data scan CLI
-  train_event_ranker.py       Phase 4 ML ranker training and candidate scoring
-  run_vetting.py              Phase 5 automated vetting CLI
-  run_stats.py                Phase 5 rate statistics CLI
-  run_matched_scan.py         Phase 5B matched target+control scan CLI
-  rank_matched_scan.py        Phase 5B ML ranking for matched-scan candidates
-  run_external_vetting.py     Phase 5C external catalog crossmatch vetting
+  run_injection_recovery.py    Phase 3 injection-recovery CLI
+  run_scan.py                  Phase 3 real-data scan CLI
+  train_event_ranker.py        Phase 4 ML ranker training and candidate scoring
+  run_vetting.py               Phase 5 automated vetting CLI
+  run_stats.py                 Phase 5 rate statistics CLI
+  run_matched_scan.py          Phase 5B matched target+control scan CLI
+  rank_matched_scan.py         Phase 5B ML ranking for matched-scan candidates
+  run_external_vetting.py      Phase 5C external catalog crossmatch vetting
   run_full_matched_pipeline.py Phase 5D full matched survey orchestrator
+  consolidate_candidates.py    Phase 5E consolidation and manual review package
   build_catalogs.py
   build_control_pool_from_user_csv.py
   verify_catalogs.py
@@ -507,6 +545,7 @@ docs/
   PHASE5B_MATCHED_SCAN.md
   PHASE5C_EXTERNAL_VETTING.md
   PHASE5D_FULL_MATCHED_RUN.md
+  PHASE5E_CANDIDATE_CONSOLIDATION.md
 cache/lightcurves/   Parquet cache (git-ignored)
 results/figures/
 results/tables/
@@ -515,6 +554,6 @@ tests/
 
 ## Next Phases
 
-- Phase 6: full-survey manual vetting cascade (all candidates from Phase 5D),
-  additional external catalog checks (Gaia variability, ASAS-SN, ZTF),
-  multi-sector confirmation, and paper draft.
+- Phase 6: manual light-curve inspection for all review-priority candidates
+  (starting with the 2 medium-priority TICs), additional external catalog checks
+  (Gaia variability, ASAS-SN, ZTF), multi-sector confirmation, and paper draft.
