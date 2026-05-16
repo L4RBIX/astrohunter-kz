@@ -39,14 +39,14 @@ Every number, every table, every plot is reproducible from a fresh clone with no
 ## Technical Overview
 
 - **Data:** Public TESS 2-minute photometry, downloaded via lightkurve/MAST and cached locally as Parquet files.
-- **Detector:** Rolling-window scanner computing ingress/egress ratio, local SNR, and dip depth. Designed to flag asymmetric dips, not symmetric planet-like transits.
+- **Detector:** The detector slides a window along each light curve and flags positions where the brightness drops sharply but recovers slowly — the kind of shape a dust tail could leave.
 - **Injection-recovery:** Synthetic asymmetric signals injected into real TESS noise to measure how sensitive the detector actually is at different depths and durations.
 - **ML ranking:** GradientBoostingClassifier trained on injection-recovery labels. Used only to prioritize events for manual review — not used to confirm or reject candidates.
 - **Automated vetting:** Six quality flags covering SNR threshold, edge-of-window detections, morphology shape, and repeated-event suppression logic.
 - **External checks:** VSX variable star crossmatch, SIMBAD object type check, TESS-EB eclipsing binary catalog.
 - **Manual review:** Per-TIC gallery folders with full light curves and event zoom panels. Dispositions recorded in a CSV template with controlled label options.
 
-All pipeline modules are in `src/astrohunter/`. Each stage has a standalone CLI script under `scripts/`. The full pipeline runs without private API keys.
+Pipeline modules live in `src/astrohunter/`, with one CLI script per stage in `scripts/`. No private API keys are required.
 
 ## How to Reproduce
 
@@ -81,5 +81,5 @@ If any candidates survived a better-tuned pipeline and a larger sample, the mini
 
 ---
 
-*Author: Bekarys Kydyrbekov · Almaty · 2026*  
+*Author: Bekarys Kydyrbek · NIS Nauryzbay, Almaty · 2026*  
 *Repository: [github.com/L4RBIX/astrohunter-kz](https://github.com/L4RBIX/astrohunter-kz)*
