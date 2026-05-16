@@ -1,189 +1,85 @@
 # AstroHunter KZ
 
-A reproducible Python pipeline for testing whether debris-disk stars produce
-more exocomet-like asymmetric TESS dip candidates than matched non-disk control
-stars.
+*A student-built pipeline for testing whether debris-disk / IR-excess stars produce more exocomet-like dips in NASA TESS light curves than matched non-disk control stars.*
 
-AstroHunter KZ uses public NASA TESS light curves and public stellar catalogs to
-build a controlled target/control experiment.  The project is intentionally
-conservative: it treats detector outputs as candidate dip-like events until they
-survive automated vetting, external catalog checks, and visual review.
+---
+
+## Why I Built This
+
+I'm a student based in Almaty. I got interested in exocomet searches after reading about the asymmetric dips detected around Beta Pictoris — the star where this whole field started in the 1980s — and the wave of follow-up work now possible with TESS data.
+
+Most exocomet searches I read about were looking at individual stars or running large blind searches without a clear false-positive baseline. The question that kept bothering me was: if you specifically pick stars known to have dusty debris disks (where comets are theoretically more likely), does that actually improve your detection rate? Or does it just produce the same noise as any other TESS search?
+
+I built AstroHunter KZ to test that question with a matched control sample. Every debris-disk / IR-excess target star is paired with a control star from the same TESS sector, similar brightness, and similar spectral type. If the detector is just picking up variability and systematics, you'd expect it to trigger equally on both groups. If disk activity genuinely correlates with comet-like signals, you'd see more events in the target sample.
+
+## What It Does
+
+The pipeline downloads public TESS 2-minute photometry via the MAST archive, runs a rolling-window asymmetric dip detector (looking for the sharp-ingress, slow-egress shape that a comet's dust tail would produce), and measures detector sensitivity using injection-recovery tests — injecting thousands of synthetic comet-like signals into real TESS noise and counting how many get recovered. Candidate events are then ranked by a gradient-boosting classifier trained on those synthetic injections, filtered through six automated quality flags, and crossmatched against three external catalogs (VSX for known variables, SIMBAD for object types, the TESS Eclipsing Binary catalog for contamination). The highest-priority events go into a manual review gallery: per-event zoom plots and full light curves, with a CSV template for recording dispositions.
+
+The ML component is deliberately limited. It ranks events by how much they resemble synthetic injections — it says nothing about whether an event is real. A high ML score means the morphology looks like a simulated asymmetric dip, not that there's a comet.
 
 ## Current Result
 
-| Item | Result |
-| --- | --- |
-| Target stars scanned | 28 |
-| Control stars scanned | 28 |
-| Raw candidate events | 156 |
-| Automated-pass events | 3 |
-| Manual keep candidates | 0 |
-| Exocomet discovery claim | Not supported |
+The development survey scanned 28 debris-disk / IR-excess targets and 28 matched controls. The detector found 156 raw dip-like events. After automated vetting, three events survived — all on the same star, TIC 444335503, which triggered 20 events total. That star is a control star, not a debris-disk target. Twenty triggers on one star is a strong indicator of stellar variability or systematic artifact, not repeated comet transits.
 
-In the current development survey, the pipeline did not find a visually credible
-exocomet candidate. The strongest automated detections were concentrated in a
-control star, TIC 444335503, indicating likely variability or systematic
-overtriggering. This negative result is scientifically useful because it
-validates the need for matched controls and conservative vetting.
+After manual inspection of 41 high-priority events, zero candidates were kept. The dispositions were: 23 likely variable star, 9 likely systematic, 9 insufficient data. The raw event rate ratio — target detections per star versus control detections per star — was 0.58, meaning controls triggered more often than targets. That's the opposite of what the hypothesis predicts.
 
-## Why This Project Matters
+**The hypothesis was not supported. The result is a negative result. No exocomet discovery claim is made.**
 
-TESS records the brightness of stars over time. If an object passes in front of
-a star, the light curve can dip. Dusty comet-like material could produce an
-asymmetric dip: a sharper drop followed by a slower recovery. In practice,
-blind searches produce many false positives from stellar variability,
-instrumental effects, eclipsing binaries, and noise.
+The clearest takeaway from TIC 444335503 is about method, not about exocomets: without the matched control sample, those three high-SNR automated-pass events could have looked like a finding. The fact that they came from a control star with 20 triggers made them immediately suspicious. The control design worked the way it was supposed to — by catching false positives before they became false claims.
 
-AstroHunter KZ asks a testable question: does selecting stars with debris disks
-or infrared excess improve the yield of plausible asymmetric-dip candidates
-compared with matched non-disk controls? The control sample is the important
-part. It prevents the project from mistaking detector overtriggering for an
-astrophysical result.
+## Why a Negative Result Still Matters
 
-## What the Pipeline Does
+The pipeline correctly identified and rejected all false positives. That's harder than it sounds; a lot of automated searches stop at the "candidates" stage without the vetting machinery to evaluate them.
 
-- Builds debris-disk / IR-excess target samples from public catalogs.
-- Crossmatches TIC, Gaia-like, and TESS availability metadata where available.
-- Builds matched non-disk controls for a target/control comparison.
-- Downloads, cleans, normalizes, and caches public TESS light curves.
-- Detects asymmetric dip-like features in real light curves.
-- Runs injection-recovery sensitivity tests with synthetic asymmetric dips.
-- Ranks events with an interpretable ML model trained on synthetic injections.
-- Applies automated vetting flags for low SNR, edge events, poor shapes, and
-  repeated triggers.
-- Checks VSX, SIMBAD, and TESS Eclipsing Binary external catalogs.
-- Builds manual-review galleries with event windows and full light curves.
-- Summarizes target/control candidate rates and audits communication claims.
+The failure mode is documented. The detector overtriggers on variable stars — 13 out of 36 candidate-producing stars crossed the overtrigger threshold. That's specific, actionable information about what needs to change before a larger survey would be meaningful.
 
-## Key Technical Features
+Every number, every table, every plot is reproducible from a fresh clone with no private data.
 
-- Python package under `src/astrohunter/`.
-- Reproducible command-line scripts under `scripts/`.
-- Public archive data only; no private telescope data.
-- No API keys required for basic public TESS usage.
-- Matched target/control design instead of a one-sided candidate search.
-- Injection recovery for detector sensitivity testing.
-- ML ranking kept separate from scientific confirmation.
-- External false-positive checks using VSX, SIMBAD, and TESS-EB metadata.
-- Manual-review gallery for transparent event inspection.
-- Candidate-only claims policy documented in `docs/CLAIMS_POLICY.md`.
-- Test suite: `453` passing tests in the current environment.
+## Technical Overview
 
-## Key Outputs
+- **Data:** Public TESS 2-minute photometry, downloaded via lightkurve/MAST and cached locally as Parquet files.
+- **Detector:** Rolling-window scanner computing ingress/egress ratio, local SNR, and dip depth. Designed to flag asymmetric dips, not symmetric planet-like transits.
+- **Injection-recovery:** Synthetic asymmetric signals injected into real TESS noise to measure how sensitive the detector actually is at different depths and durations.
+- **ML ranking:** GradientBoostingClassifier trained on injection-recovery labels. Used only to prioritize events for manual review — not used to confirm or reject candidates.
+- **Automated vetting:** Six quality flags covering SNR threshold, edge-of-window detections, morphology shape, and repeated-event suppression logic.
+- **External checks:** VSX variable star crossmatch, SIMBAD object type check, TESS-EB eclipsing binary catalog.
+- **Manual review:** Per-TIC gallery folders with full light curves and event zoom panels. Dispositions recorded in a CSV template with controlled label options.
 
-Important result tables and reports include:
+All pipeline modules are in `src/astrohunter/`. Each stage has a standalone CLI script under `scripts/`. The full pipeline runs without private API keys.
 
-- `results/tables/full_matched_run_summary.csv`
-- `results/tables/full_matched_rate_ratio_summary.csv`
-- `results/tables/full_matched_star_level_summary.csv`
-- `results/tables/full_matched_manual_review_disposition_filled.csv`
-- `results/tables/final_dev_survey_key_numbers.csv`
-- `results/tables/final_dev_survey_claims_audit.csv`
-- `results/candidates/manual_review_gallery/`
-- `docs/PHASE5G_DEV_SURVEY_INTERPRETATION.md`
-
-The current development sample produced zero `keep_candidate` rows after
-conservative manual disposition.
-
-## Quickstart
+## How to Reproduce
 
 ```bash
 git clone https://github.com/L4RBIX/astrohunter-kz.git
 cd astrohunter-kz
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 python -m pytest
 ```
 
-For full pipeline commands, including catalog building, light-curve scans,
-injection recovery, ML ranking, external vetting, and manual-review gallery
-generation, see [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+For the full run — catalog building, light-curve scans, injection recovery, ML ranking, external vetting, candidate consolidation, and manual review gallery — see [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
 
-## Repository Structure
+Cached light curves live in `cache/lightcurves/` (excluded from git) and are re-downloadable from MAST. Delete a Parquet file and re-run to force a fresh download.
 
-```text
-src/astrohunter/
-  lightcurves.py       TESS search, download, cleaning, normalization, cache
-  catalogs.py          Public catalog loading and target-sample normalization
-  crossmatch.py        Coordinate matching and control-sample utilities
-  asymmetry.py         Dip detection and asymmetry feature extraction
-  injection.py         Synthetic dip injection and recovery experiments
-  features.py          Event feature engineering
-  ml.py                Interpretable event ranker
-  vetting.py           Automated candidate-vetting flags
-  external_vetting.py  VSX, SIMBAD, and TESS-EB checks
-  stats.py             Target/control rate statistics
-  consolidation.py     Star-level summaries and review-priority tables
-  inspection.py        Manual-review target selection and gallery creation
-  plotting.py          Matplotlib figure helpers
+## What I Learned / Next Steps
 
-scripts/               Reproducible command-line entry points
-notebooks/             Lightweight exploratory notebooks
-catalogs/              Small derived target/control catalog products
-results/tables/        Reproducible CSV outputs and claims audits
-results/figures/       Diagnostic figures
-results/candidates/    Manual-review gallery outputs
-docs/                  Methods, reproducibility, interpretation, and outreach docs
-tests/                 Pytest suite
-```
+The biggest lesson is that matched controls are not optional. They're the only part of the pipeline that makes the result interpretable. Without them, the TIC 444335503 events would have looked like candidates.
 
-## Scientific Integrity
+The detector's main problem is overtriggering on variable stars. The next version needs explicit suppression of repeated events on the same star, and probably a periodic-signal rejection step before the asymmetry check. The sample size also needs to grow — 28 per group is too small for reliable rate statistics regardless of what the detector finds.
 
-This repository identifies candidate dip-like events only. It does not claim
-confirmed exocomets. The current development survey produced zero manual
-`keep_candidate` rows. All results should be interpreted as
-pipeline-development outputs unless independently confirmed.
-
-The negative result is part of the contribution: it shows that a detector can
-produce convincing-looking automated triggers on control stars, and that
-matched controls plus conservative vetting are necessary before making
-astrophysical claims.
-
-## Communication-Safe Wording
-
-Good wording:
-
-- "candidate dip-like events"
-- "asymmetric TESS dip candidates"
-- "development-survey negative result"
-- "no candidate survived conservative manual review"
-- "pipeline validation with matched controls"
-
-Avoid:
-
-- "confirmed exocomet"
-- "discovered exocomets"
-- "AI discovered"
-- "NASA-level model"
-- "fully confirmed"
-
-## Development Milestones
-
-This repository now includes:
-
-- Beta Pic positive-control light-curve workflow.
-- Local public-catalog target loading and TIC/Gaia/TESS metadata enrichment.
-- Matched target/control sample preparation.
-- Real TESS light-curve scan with caching.
-- Injection-recovery experiments for detector sensitivity.
-- Interpretable ML event ranking.
-- Automated vetting and rate-ratio statistics.
-- External catalog crossmatching with VSX, SIMBAD, and TESS-EB.
-- Manual-review gallery and conservative disposition table.
-- Final development-survey interpretation and claims audit.
-
-Detailed commands and phase-level notes live in the documentation rather than
-the main README.
+If any candidates survived a better-tuned pipeline and a larger sample, the minimum bar for taking them seriously would be multi-sector confirmation plus expert visual review. Nothing in the current survey is close to that bar.
 
 ## Documentation
 
-- [GitHub portfolio summary](docs/GITHUB_PORTFOLIO_SUMMARY.md)
-- [Science fair report](docs/SCIENCE_FAIR_REPORT.md)
-- [Presentation script](docs/PROJECT_PRESENTATION_SCRIPT.md)
-- [Poster outline](docs/POSTER_OUTLINE.md)
-- [Development-survey interpretation](docs/PHASE5G_DEV_SURVEY_INTERPRETATION.md)
-- [Next steps to publication](docs/NEXT_STEPS_TO_PUBLICATION.md)
-- [Reproducibility guide](docs/REPRODUCIBILITY.md)
-- [Claims policy](docs/CLAIMS_POLICY.md)
+- [Science fair report](docs/SCIENCE_FAIR_REPORT.md) — full write-up of the method, results, and negative-result interpretation
+- [Presentation script](docs/PROJECT_PRESENTATION_SCRIPT.md) — 4–6 minute spoken script and judge Q&A
+- [Poster outline](docs/POSTER_OUTLINE.md) — poster layout and text blocks
+- [Reproducibility guide](docs/REPRODUCIBILITY.md) — step-by-step commands for every pipeline stage
+- [Claims policy](docs/CLAIMS_POLICY.md) — what this project can and cannot claim
 
+---
+
+*Author: Bekarys Kydyrbekov · Almaty · 2026*  
+*Repository: [github.com/L4RBIX/astrohunter-kz](https://github.com/L4RBIX/astrohunter-kz)*
