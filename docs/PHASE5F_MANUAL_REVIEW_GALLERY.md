@@ -136,6 +136,12 @@ python scripts/build_manual_review_gallery.py \
 | Total plots generated | 59 |
 | LC coverage | 18/18 TICs have cached light curves |
 
+### Manual disposition update
+
+The two manually inspected `unsure` cases, TIC 229012143 / HD 203 and
+TIC 91529289 / phi For, were conservatively changed to `insufficient_data`
+after visual review. No row remains labelled `keep_candidate`.
+
 ### TIC-level inspection summary
 
 | TIC | Role | Name | Priority | Events | Plots |

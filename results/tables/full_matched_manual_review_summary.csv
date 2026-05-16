@@ -1,0 +1,19 @@
+section,metric,value,sample_role,manual_label,tic_id,target_name,event_time_btjd,warning,notes
+overall,total_rows,41,,,,,,,Filled manual disposition rows after visual review of remaining unsure cases.
+counts_by_manual_label,count,0,,keep_candidate,,,,,
+counts_by_manual_label,count,23,,likely_variable_star,,,,,
+counts_by_manual_label,count,9,,likely_systematic,,,,,
+counts_by_manual_label,count,9,,insufficient_data,,,,,
+counts_by_manual_label,count,0,,unsure,,,,,
+counts_by_sample_role_and_manual_label,count,9,control,likely_systematic,,,,,
+counts_by_sample_role_and_manual_label,count,5,control,likely_variable_star,,,,,
+counts_by_sample_role_and_manual_label,count,9,target,insufficient_data,,,,,
+counts_by_sample_role_and_manual_label,count,18,target,likely_variable_star,,,,,
+special_counts,number_of_keep_candidate,0,,,,,,,
+special_counts,number_of_unsure,0,,,,,,,
+special_counts,number_of_likely_variable_star,23,,,,,,,
+special_counts,number_of_likely_systematic,9,,,,,,,
+special_counts,number_of_insufficient_data,9,,,,,,,
+manual_review_update,resolved_unsure_rows,2,,,,,,The two previously unsure rows were conservatively changed to insufficient_data after visual review.,TIC 229012143 / HD 203 and TIC 91529289 / phi For show no visually convincing asymmetric transit morphology.
+keep_candidate_rows,none,0,,,,,,No row remains labelled keep_candidate after conservative manual review.,Current dev/full matched sample produced no keep_candidate rows.
+human_review_required,n_tics_in_review_package,18,,,,,,"All labels remain preliminary conservative manual dispositions, not discovery claims.","TICs: 12377940, 37748347, 63790159, 91529289, 118301927, 155996406, 194503676, 229012143, 229142326, 234309613, 372121208, 381003375, 417236897, 435680540, 436544292, 436840249, 444335503, 469974193"

@@ -1,0 +1,19 @@
+metric,value,source_table,interpretation
+target_stars_scanned_successfully,28,full_matched_run_summary.csv,Development survey successfully scanned 28 debris-disk/IR-excess target stars.
+control_stars_scanned_successfully,28,full_matched_run_summary.csv,Development survey successfully scanned 28 matched control stars.
+raw_candidate_events_total,156,full_matched_run_summary.csv,Raw detector output before automated and manual vetting.
+raw_candidate_events_target,57,full_matched_run_summary.csv,Raw target-side detector triggers; not validated candidates.
+raw_candidate_events_control,99,full_matched_run_summary.csv,Raw control-side detector triggers; controls produced more raw events in this dev run.
+raw_candidate_rate_ratio_target_over_control,0.5757575757575757,full_matched_rate_ratio_summary.csv,Raw target/control event-rate ratio is below 1; raw counts do not support enhanced target yield.
+automated_post_vetting_pass_total,3,full_matched_rate_ratio_summary.csv,Only three events passed automated vetting.
+automated_post_vetting_pass_target,0,full_matched_rate_ratio_summary.csv,No target-star events passed automated vetting.
+automated_post_vetting_pass_control,3,full_matched_rate_ratio_summary.csv,All automated pass events occurred in the control sample.
+automated_pass_tics,444335503,full_matched_manual_review_disposition_filled.csv,"All three automated pass rows are on TIC 444335503, an overtriggered control star."
+manual_keep_candidate_total,0,full_matched_manual_review_disposition_filled.csv,Conservative manual prefill found no rows suitable for keep_candidate.
+manual_likely_variable_star_total,23,full_matched_manual_review_disposition_filled.csv,Most prefilled review rows were rejected as likely variable/repeated behavior.
+manual_likely_systematic_total,9,full_matched_manual_review_disposition_filled.csv,Several control/repeated or flagged rows were treated as likely systematic.
+manual_unsure_total,2,full_matched_manual_review_disposition_filled.csv,Only two rows remain unsure pending human visual review.
+overtriggered_star_count,13,full_matched_overtriggered_stars.csv,"Thirteen TICs exceeded the overtrigger threshold, showing detector false-positive pressure."
+top_overtriggered_tic,444335503,full_matched_overtriggered_stars.csv,Top overtriggered source is TIC 444335503 with 20 events in the control sample.
+known_variable_match_review_rows,7,full_matched_manual_review_disposition_filled.csv,External known-variable matches further reduce candidate credibility.
+exocomet_claim_supported,False,manual review and rate-ratio outputs,No Phase 5G result supports an exocomet discovery or confirmation claim.
