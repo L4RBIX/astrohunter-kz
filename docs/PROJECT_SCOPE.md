@@ -244,6 +244,42 @@ Outputs: `results/tables/full_matched_inspection_targets.csv`,
 See [docs/PHASE5F_MANUAL_REVIEW_GALLERY.md](PHASE5F_MANUAL_REVIEW_GALLERY.md)
 for full documentation.
 
+## Phase 6A: Science-Fair / Portfolio Communication Package (complete)
+
+Convert the completed technical project into a polished, honest communication
+package for science-fair judging, research competitions, GitHub portfolios, and
+public science communication.
+
+Constraints:
+- All communication must report the honest negative result (0 surviving candidates).
+- The following language is prohibited in all materials: "confirmed exocomet",
+  "discovered exocomets", "AI detected", "NASA-level discovery",
+  "Kazakhstan discovered exocomets", "proof that debris disks host exocomets".
+- Approved language: "candidate dip-like features", "negative result", "hypothesis
+  not supported", "reproducible pipeline", "matched-sample analysis", "zero
+  candidates survived conservative vetting".
+- Phase 6A adds no new source code and does not change any pipeline results.
+
+Key additions:
+- `docs/SCIENCE_FAIR_REPORT.md`: 16-section written report covering abstract,
+  methodology, results, negative-result interpretation, and claims policy.
+- `docs/PROJECT_PRESENTATION_SCRIPT.md`: 4-6 minute spoken script with 8 judge
+  Q&A pairs.
+- `docs/POSTER_OUTLINE.md`: 36×48" poster layout with all text blocks, ASCII
+  layout map, and production notes.
+- `docs/SOCIAL_MEDIA_POSTS.md`: Platform-specific posts (LinkedIn, Threads/X,
+  TikTok, Instagram, GitHub) with DO NOT SAY section and usage rules.
+- `docs/GITHUB_PORTFOLIO_SUMMARY.md`: Portfolio-quality summary for technical
+  audiences.
+- `docs/PHASE6A_COMMUNICATION_PACKAGE.md`: Phase 6A overview, claims policy,
+  and completion checklist.
+- `results/tables/communication_key_messages.csv`: 10-row audit of approved vs.
+  forbidden messages with reasoning.
+
+Phase 6A result: All 6 documents and the claims audit CSV are complete.
+All materials consistently report 0 surviving candidates and the honest negative
+result. No discovery claim is made.
+
 ## Phase 6: Paper Draft and arXiv-Readiness Audit
 
 Prepare a transparent methods/results draft, archive reproducible tables, audit
