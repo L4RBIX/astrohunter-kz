@@ -270,9 +270,10 @@ Expected Phase 5 outputs:
 - `results/figures/vetting_flag_counts.png`
 
 Automated vetting applies heuristic flags only.  It does NOT confirm
-exocomet detections.  External catalog crossmatches (EB/VSX/SIMBAD) are
-not implemented.  Dev-sample rate statistics are preliminary and unstable
-with N < 10 candidates.  See `docs/PHASE5_VETTING_STATISTICS.md`.
+exocomet detections.  External catalog checks are handled in the later
+VSX/SIMBAD/TESS-EB vetting step.  Dev-sample rate statistics are preliminary
+and unstable with small candidate counts.  See
+`docs/PHASE5_VETTING_STATISTICS.md`.
 
 ## Phase 5B: Matched Target/Control Scan
 
@@ -492,3 +493,55 @@ are preliminary.  TIC 444335503 must be treated as likely overtriggered until
 its light curve has been inspected for periodic variability.
 See `docs/PHASE5F_MANUAL_REVIEW_GALLERY.md` for the disposition label guide
 and interpretation notes.
+
+## Phase 6A: Science-Fair / Portfolio Communication Package
+
+Phase 6A is documentation only — no pipeline scripts to run.
+
+The communication package was created by reading the actual pipeline outputs and
+documenting them honestly. All numbers in Phase 6A documents come from the real
+pipeline result tables.
+
+To verify that all Phase 6A documents are present:
+
+```bash
+ls docs/SCIENCE_FAIR_REPORT.md \
+   docs/PROJECT_PRESENTATION_SCRIPT.md \
+   docs/POSTER_OUTLINE.md \
+   docs/SOCIAL_MEDIA_POSTS.md \
+   docs/GITHUB_PORTFOLIO_SUMMARY.md \
+   docs/PHASE6A_COMMUNICATION_PACKAGE.md \
+   results/tables/communication_key_messages.csv
+```
+
+All seven files should exist and be non-empty.
+
+To verify the claims audit CSV:
+
+```bash
+python -c "
+import csv
+with open('results/tables/communication_key_messages.csv') as f:
+    rows = list(csv.DictReader(f))
+print(f'{len(rows)} message scenarios documented')
+print('Columns:', list(rows[0].keys()) if rows else 'empty')
+"
+```
+
+Expected output: 10 message scenarios, columns: message_type, approved_message,
+forbidden_overclaim, reason.
+
+Phase 6A adds no new source code. The test suite is unaffected.
+
+```bash
+python -m pytest tests/ -q
+# Expected: 453 passed (all tests pass; Phase 6A adds no new code)
+```
+
+Key result numbers communicated in all Phase 6A documents:
+- 28 target stars, 28 control stars
+- 156 raw events (57 target, 99 control)
+- Rate ratio 0.58
+- 3 automated pass events (all on TIC 444335503, control)
+- 0 manual keep_candidate
+- 0 surviving candidates
