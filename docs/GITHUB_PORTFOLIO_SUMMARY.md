@@ -1,6 +1,6 @@
 # AstroHunter KZ — GitHub Portfolio Summary
 
-**Author:** Bekarys Kydyrbekov
+**Author:** Bekarys Kydyrbek
 **Repository:** https://github.com/L4RBIX/astrohunter-kz
 **Date:** 2026-05-16
 

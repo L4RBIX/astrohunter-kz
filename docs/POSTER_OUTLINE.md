@@ -53,7 +53,7 @@
 
 > A Matched-Sample, Multi-Stage Vetting Pipeline with Machine Learning Ranking
 
-**Author line:** Bekarys Kydyrbekov | 2026
+**Author line:** Bekarys Kydyrbek | 2026
 
 ---
 

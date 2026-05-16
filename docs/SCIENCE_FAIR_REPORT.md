@@ -1,7 +1,7 @@
 # AstroHunter KZ
 ## A Controlled TESS Search for Exocomet-Like Asymmetric Transit Candidates Around Debris-Disk Stars
 
-**Author:** Bekarys Kydyrbekov
+**Author:** Bekarys Kydyrbek
 **Date:** 2026-05-16
 **Repository:** https://github.com/L4RBIX/astrohunter-kz
 
